@@ -3,3 +3,5 @@ from .models import*
 # Register your models here.
 
 admin.site.register(Company)
+admin.site.register(ProductCategory)
+admin.site.register(Product)
