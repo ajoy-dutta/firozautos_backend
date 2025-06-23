@@ -29,8 +29,11 @@ class Product(models.Model):
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     brand_name = models.CharField(max_length=100, blank=True, null=True) 
     model_no = models.CharField(max_length=100, blank=True, null=True) 
-    net_weight = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    product_mrp = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    net_weight = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    product_mrp = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    percentage = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    product_bdt = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+
     def save(self, *args, **kwargs):
         if not self.product_code:
             last_product = Product.objects.order_by('-id').first()
