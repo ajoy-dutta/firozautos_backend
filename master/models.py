@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 class Company(models.Model):
     company_name = models.CharField(max_length=255)
@@ -10,6 +11,7 @@ class Company(models.Model):
 
     def __str__(self):
         return self.company_name
+    
 
 class ProductCategory(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='product_categories')
@@ -34,7 +36,7 @@ class Product(models.Model):
     product_mrp = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     percentage = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     product_bdt = models.DecimalField(max_digits=12, decimal_places=3, default=0)
-
+    created_at = models.DateTimeField(default=timezone.now)
     def save(self, *args, **kwargs):
         if not self.product_code:
             last_product = Product.objects.order_by('-id').first()
@@ -47,3 +49,53 @@ class Product(models.Model):
         
     def __str__(self):
         return f"{self.company.company_name} - {self.category.category_name} - {self.product_name}"
+    
+
+class CostCategory(models.Model):
+    category_name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.category_name
+
+
+class SourceCategory(models.Model):
+    category_name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.category_name
+    
+
+class DistrictMaster(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class CountryMaster(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class SupplierTypeMaster(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class BankCategoryMaster(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class BankMaster(models.Model):
+    name = models.CharField(max_length=100)
+    bank_category = models.ForeignKey(BankCategoryMaster, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name

@@ -6,6 +6,7 @@ class CompanySerializer(serializers.ModelSerializer):
         model = Company
         fields = '__all__'
 
+
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_detail = CompanySerializer(source='company', read_only=True)
 
@@ -13,9 +14,52 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         model = ProductCategory
         fields = ['id', 'company', 'company_detail', 'category_name']
 
+
 class ProductSerializer(serializers.ModelSerializer):
     category_detail = ProductCategorySerializer(source='category', read_only=True)
 
     class Meta:
         model = Product
+        fields = '__all__'
+
+
+class CostCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CostCategory
+        fields = '__all__'
+
+
+class SourceCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SourceCategory
+        fields = '__all__'
+
+
+class DistrictMasterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DistrictMaster
+        fields = '__all__'
+
+
+class CountryMasterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CountryMaster
+        fields = '__all__'
+
+
+class SupplierTypeMasterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupplierTypeMaster
+        fields = '__all__'
+
+
+class BankCategoryMasterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BankCategoryMaster
+        fields = '__all__'
+        
+
+class BankMasterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BankMaster
         fields = '__all__'

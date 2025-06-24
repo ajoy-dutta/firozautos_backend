@@ -3,10 +3,16 @@ from rest_framework.routers import DefaultRouter
 from .views import*
 
 router = DefaultRouter()
-router.register(r'companies', CompanyViewSet)
-router.register(r'product-categories', ProductCategoryViewSet)
-router.register(r'products', ProductViewSet)
-
+router.register('companies', CompanyViewSet)
+router.register('product-categories', ProductCategoryViewSet)
+router.register('products', ProductViewSet)
+router.register('cost-categories', CostCategoryViewSet)
+router.register('source-categories', SourceCategoryViewSet)
+router.register('districts', DistrictMasterViewSet)
+router.register('countries', CountryMasterViewSet)
+router.register('supplier-types', SupplierTypeMasterViewSet)
+router.register('bank-categories', BankCategoryMasterViewSet)
+router.register('banks', BankMasterViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
