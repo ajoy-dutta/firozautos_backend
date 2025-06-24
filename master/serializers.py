@@ -35,6 +35,12 @@ class SourceCategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PaymentModeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentMode
+        fields = '__all__'
+
+
 class DistrictMasterSerializer(serializers.ModelSerializer):
     class Meta:
         model = DistrictMaster
@@ -54,12 +60,15 @@ class SupplierTypeMasterSerializer(serializers.ModelSerializer):
 
 
 class BankCategoryMasterSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = BankCategoryMaster
         fields = '__all__'
         
 
 class BankMasterSerializer(serializers.ModelSerializer):
+    bank_category_detail = BankCategoryMasterSerializer(source='bank_category', read_only=True)
+
     class Meta:
         model = BankMaster
         fields = '__all__'

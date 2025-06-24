@@ -26,6 +26,11 @@ class SourceCategoryViewSet(viewsets.ModelViewSet):
     queryset = SourceCategory.objects.all()
     serializer_class = SourceCategorySerializer
 
+    
+class PaymentModeViewSet(viewsets.ModelViewSet):
+    queryset = PaymentMode.objects.all()
+    serializer_class = PaymentModeSerializer
+
 
 class DistrictMasterViewSet(viewsets.ModelViewSet):
     queryset = DistrictMaster.objects.all()

@@ -5,8 +5,8 @@ from .serializers import UserRegistrationSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import status, permissions
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from person.permissions import IsStaffOrAdmin
 
 User = get_user_model()
 
@@ -23,14 +23,14 @@ class UserRegistrationView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class CurrentUserView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffOrAdmin]
 
     def get(self, request):
         serializer = UserRegistrationSerializer(request.user)
         return Response(serializer.data)
     
 class PromoteToStaffView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminUser]
 
     def post(self, user_id):
         try:

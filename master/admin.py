@@ -6,3 +6,14 @@ admin.site.register(Company)
 admin.site.register(ProductCategory)
 admin.site.register(Product)
 admin.site.register(CostCategory)
+admin.site.register(SourceCategory)
+admin.site.register(PaymentMode)
+admin.site.register(DistrictMaster)
+admin.site.register(CountryMaster)
+admin.site.register(SupplierTypeMaster)
+admin.site.register(BankCategoryMaster)
+admin.site.register(BankMaster)
+
+
+
+
