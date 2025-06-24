@@ -30,6 +30,7 @@ class Product(models.Model):
     brand_name = models.CharField(max_length=100, blank=True, null=True) 
     model_no = models.CharField(max_length=100, blank=True, null=True) 
     net_weight = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    remarks = models.CharField(max_length=100, blank=True, null=True) 
     product_mrp = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     percentage = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     product_bdt = models.DecimalField(max_digits=12, decimal_places=3, default=0)
