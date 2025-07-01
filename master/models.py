@@ -36,6 +36,8 @@ class Product(models.Model):
     percentage = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     product_bdt = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     created_at = models.DateTimeField(default=timezone.now)
+    remarks = models.TextField(blank=True,null=True)
+    
     def save(self, *args, **kwargs):
         if not self.product_code:
             last_product = Product.objects.order_by('-id').first()

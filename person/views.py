@@ -13,7 +13,30 @@ class ExporterViewSet(viewsets.ModelViewSet):
 class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
-    permission_classes = [IsStaffOrAdmin]
+
+    def perform_create(self, serializer):
+        education_raw = self.request.data.get('education', '[]')
+        try:
+            education = json.loads(education_raw)
+        except json.JSONDecodeError:
+            education = []
+
+        serializer.save(education=education)
+
+    def perform_update(self, serializer):
+        education_raw = self.request.data.get('education', '[]')
+        try:
+            education = json.loads(education_raw)
+        except json.JSONDecodeError:
+            education = []
+
+        serializer.save(education=education)
+
+
+
+class SupplierViewSet(viewsets.ModelViewSet):
+    queryset = Supplier.objects.all().order_by('-created_at')
+    serializer_class = SupplierSerializer
 
 
 
@@ -21,6 +44,3 @@ class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all().order_by('-created_at')
     serializer_class = CustomerSerializer
     permission_classes = [IsStaffOrAdmin]
-
-
-
