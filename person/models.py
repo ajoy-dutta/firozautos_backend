@@ -29,7 +29,7 @@ class Employee(models.Model):
     joining_date = models.DateField()
     photo = models.ImageField(upload_to='employee_photos/', null=True, blank=True)
     age = models.PositiveIntegerField(null=True, blank=True)
-    religion = models.CharField(max_length=20, choices=RELIGION_CHOICES)
+    religion = models.CharField(max_length=20, choices=RELIGION_CHOICES,blank=True,null=True)
     birth_id_no = models.CharField(max_length=100, blank=True, null=True)
     nid_no = models.CharField(max_length=100, blank=True, null=True)
     passport_no = models.CharField(max_length=100, blank=True, null=True)
