@@ -9,9 +9,18 @@ class ExporterViewSet(viewsets.ModelViewSet):
     permission_classes = [IsStaffOrAdmin]
 
 
+
 class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
     permission_classes = [IsStaffOrAdmin]
+
+
+
+class CustomerViewSet(viewsets.ModelViewSet):
+    queryset = Customer.objects.all().order_by('-created_at')
+    serializer_class = CustomerSerializer
+    permission_classes = [IsStaffOrAdmin]
+
 
 
