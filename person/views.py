@@ -31,3 +31,6 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
         serializer.save(education=education)
 
+class SupplierViewSet(viewsets.ModelViewSet):
+    queryset = Supplier.objects.all().order_by('-created_at')
+    serializer_class = SupplierSerializer

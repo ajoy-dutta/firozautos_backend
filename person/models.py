@@ -1,5 +1,6 @@
 from django.db import models
 from rest_framework.permissions import BasePermission
+from master.models import*
 
 class IsStaffOrAdmin(BasePermission):
     def has_permission(self, request, view):
@@ -93,4 +94,24 @@ class Education(models.Model):
     group_or_subject = models.CharField(max_length=100)
     gpa_or_dvision = models.CharField(max_length=50)
     board_or_university = models.CharField(max_length=100)
+
+
+class Supplier(models.Model):
+    supplier_name = models.CharField(max_length=200)
+    district = models.ForeignKey(DistrictMaster, on_delete=models.PROTECT)
+    country = models.CharField(max_length=100)
+    supplier_type = models.ForeignKey(SupplierTypeMaster, on_delete=models.PROTECT)
+    shop_name = models.CharField(max_length=200, blank=True, null=True)
+    phone1 = models.CharField(max_length=20)
+    phone2 = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    address = models.TextField()
+    date_of_birth = models.DateField(blank=True, null=True)
+    nid_no = models.CharField(max_length=100, blank=True, null=True)
+    remarks = models.TextField(blank=True, null=True)
+    previous_due_amount = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.supplier_name
 

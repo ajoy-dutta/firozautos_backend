@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import*
 import json
+from master.serializers import *
+from master.models import *
 
 class ExporterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,3 +46,14 @@ class EmployeeSerializer(serializers.ModelSerializer):
                 Education.objects.create(employee=instance, **edu)
 
         return instance
+    
+
+class SupplierSerializer(serializers.ModelSerializer):
+    supplier_type_detail = SupplierTypeMasterSerializer(source='supplier_type', read_only=True)
+    district_detail = DistrictMasterSerializer(source='district', read_only=True)
+
+    class Meta:
+        model = Supplier
+        fields = '__all__'
+
+
