@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import*
 import json
+from master.serializers import *
+from master.models import *
 
 class ExporterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,20 +17,11 @@ class EducationSerializer(serializers.ModelSerializer):
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
-    education = EducationSerializer(many=True)
+    education = EducationSerializer(many=True, required=False)
 
     class Meta:
         model = Employee
         fields = '__all__'
-
-    def to_internal_value(self, data):
-        # If education is a JSON string (because it came from multipart), decode it
-        if isinstance(data.get('education'), str):
-            try:
-                data['education'] = json.loads(data['education'])
-            except json.JSONDecodeError:
-                raise serializers.ValidationError({"education": ["Invalid JSON"]})
-        return super().to_internal_value(data)
 
     def create(self, validated_data):
         education_data = validated_data.pop('education', [])
@@ -36,3 +29,40 @@ class EmployeeSerializer(serializers.ModelSerializer):
         for edu in education_data:
             Education.objects.create(employee=employee, **edu)
         return employee
+
+    def update(self, instance, validated_data):
+        education_data = validated_data.pop('education', None)
+
+        # Update main fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Handle education records
+        if education_data is not None:
+            # Replace all existing records
+            instance.education.all().delete()
+            for edu in education_data:
+                Education.objects.create(employee=instance, **edu)
+
+        return instance
+    
+
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = '__all__'
+
+
+        
+class SupplierSerializer(serializers.ModelSerializer):
+    supplier_type_detail = SupplierTypeMasterSerializer(source='supplier_type', read_only=True)
+    district_detail = DistrictMasterSerializer(source='district', read_only=True)
+
+    class Meta:
+        model = Supplier
+        fields = '__all__'
+
+

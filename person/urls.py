@@ -6,6 +6,8 @@ router = DefaultRouter()
 
 router.register(r'exporters', ExporterViewSet)
 router.register(r'employees', EmployeeViewSet)
+router.register(r'customers', CustomerViewSet)
+router.register(r'suppliers', SupplierViewSet)
 
 
 urlpatterns = [

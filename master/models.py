@@ -37,6 +37,8 @@ class Product(models.Model):
     percentage = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     product_bdt = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     created_at = models.DateTimeField(default=timezone.now)
+    remarks = models.TextField(blank=True,null=True)
+    
     def save(self, *args, **kwargs):
         if not self.product_code:
             last_product = Product.objects.order_by('-id').first()
@@ -63,7 +65,12 @@ class SourceCategory(models.Model):
 
     def __str__(self):
         return self.category_name
-    
+
+class PaymentMode(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
 
 class DistrictMaster(models.Model):
     name = models.CharField(max_length=100)
