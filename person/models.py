@@ -1,3 +1,4 @@
+
 from django.db import models
 
 
@@ -89,4 +90,3 @@ class Education(models.Model):
     group_or_subject = models.CharField(max_length=100)
     gpa_or_dvision = models.CharField(max_length=50)
     board_or_university = models.CharField(max_length=100)
-
