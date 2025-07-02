@@ -16,3 +16,17 @@ class LoanDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+
+
+
+class PurchaseEntryListCreateView(generics.ListCreateAPIView):
+    queryset = PurchaseEntry.objects.all().order_by('-purchase_date')
+    serializer_class = PurchaseEntrySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+
+class PurchaseEntryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PurchaseEntry.objects.all()
+    serializer_class = PurchaseEntrySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]

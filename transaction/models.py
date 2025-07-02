@@ -23,3 +23,23 @@ class Loan(models.Model):
 
     def __str__(self):
         return f"{self.bank_name or 'Loan'} - {self.date}"
+    
+
+
+
+
+class PurchaseEntry(models.Model):
+    invoice_no = models.CharField(max_length=100, default='AUTO GENERATE')
+    purchase_date = models.DateField()
+    exporter_name = models.CharField(max_length=255)
+    company_name = models.CharField(max_length=255)
+    part_no_input = models.CharField(max_length=100)
+    part_no_select = models.CharField(max_length=100, blank=True, null=True)
+    total_price = models.DecimalField(max_digits=12, decimal_places=2)
+    quantity = models.PositiveIntegerField()
+    purchase_price = models.DecimalField(max_digits=12, decimal_places=2)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Invoice: {self.invoice_no} on {self.purchase_date}"

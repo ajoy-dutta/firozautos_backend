@@ -86,6 +86,8 @@ class Employee(models.Model):
     def __str__(self):
         return self.employee_name
 
+
+
 class Education(models.Model):
     employee = models.ForeignKey(Employee, related_name='education', on_delete=models.CASCADE)
     exam_name = models.CharField(max_length=255)
