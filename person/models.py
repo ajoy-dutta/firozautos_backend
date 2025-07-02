@@ -1,3 +1,4 @@
+
 from django.db import models
 from rest_framework.permissions import BasePermission
 from master.models import*
@@ -70,6 +71,8 @@ class Employee(models.Model):
     reference_by = models.CharField(max_length=255, blank=True, null=True)
     reference_mobile = models.CharField(max_length=20, blank=True, null=True)
     reference_address = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(blank=True, null=True, auto_now_add=True)
+
 
     def save(self, *args, **kwargs):
         if not self.employee_code:
