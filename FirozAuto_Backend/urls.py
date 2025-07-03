@@ -9,6 +9,7 @@ urlpatterns = [
     path('api/',include('person.urls')),
     path('api/',include('Authentication.urls')),
     path('api/',include('transaction.urls')),
+    path('api/', include("product.urls")),
 
 
 ] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

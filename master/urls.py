@@ -4,8 +4,6 @@ from .views import*
 
 router = DefaultRouter()
 router.register('companies', CompanyViewSet)
-router.register('product-categories', ProductCategoryViewSet)
-router.register('products', ProductViewSet)
 router.register('cost-categories', CostCategoryViewSet)
 router.register('source-categories', SourceCategoryViewSet)
 router.register('payment-mode', PaymentModeViewSet)
@@ -14,6 +12,7 @@ router.register('countries', CountryMasterViewSet)
 router.register('supplier-types', SupplierTypeMasterViewSet)
 router.register('bank-categories', BankCategoryMasterViewSet)
 router.register('banks', BankMasterViewSet)
+
 
 urlpatterns = [
     path('', include(router.urls)),
