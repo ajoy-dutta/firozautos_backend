@@ -42,3 +42,4 @@ class PurchaseEntry(models.Model):
 
     def __str__(self):
         return f"Invoice: {self.invoice_no} on {self.purchase_date}"
+

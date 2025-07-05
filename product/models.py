@@ -103,3 +103,32 @@ class PurchasePayment(models.Model):
 
     def __str__(self):
         return f"Payment for {self.purchase.invoice_no}"
+    
+
+
+
+
+class StockProduct(models.Model):
+    company_name = models.CharField(max_length=255)
+    part_no = models.CharField(max_length=100)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+
+    purchase_quantity = models.PositiveIntegerField(default=0)
+    sale_quantity = models.PositiveIntegerField(default=0)
+    damage_quantity = models.PositiveIntegerField(default=0)
+    current_stock_quantity = models.PositiveIntegerField(default=0)
+
+    purchase_price = models.DecimalField(max_digits=12, decimal_places=2)
+    sale_price = models.DecimalField(max_digits=12, decimal_places=2)
+    current_stock_value = models.DecimalField(max_digits=14, decimal_places=2)
+
+    net_weight = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
+
+    damage_product = models.TextField(blank=True, null=True)
+    product_sale_summary = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.product.product_name} - {self.part_no}"
+
