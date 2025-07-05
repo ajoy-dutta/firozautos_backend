@@ -31,7 +31,7 @@ class PurchaseProductSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(),
-        source='Product',
+        source='product',
         write_only=True
     )
 
@@ -73,7 +73,7 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
     supplier = SupplierSerializer(read_only=True)
     supplier_id = serializers.PrimaryKeyRelatedField(
         queryset=Supplier.objects.all(),
-        source='Supplier',
+        source='supplier',
         write_only=True
     )
 
