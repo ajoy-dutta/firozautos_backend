@@ -53,15 +53,26 @@ class SupplierPurchase(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     company_name = models.CharField(max_length=255)
     purchase_date = models.DateField()
-    invoice_no = models.CharField(max_length=100)
+    invoice_no = models.CharField(max_length=100, blank=True, null = True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)
     discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     total_payable_amount = models.DecimalField(max_digits=12, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
+    def generate_invoice_no(self):
+        last_id = SupplierPurchase.objects.all().order_by('-id').first()
+        next_number = (last_id.id + 1) if last_id else 1
+        return f"PU{next_number:08d}"
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_no:
+            self.invoice_no = self.generate_invoice_no()
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Invoice {self.invoice_no} - {self.supplier.supplier_name}"
-
 
 
 
@@ -74,6 +85,7 @@ class PurchaseProduct(models.Model):
     percentage = models.DecimalField(max_digits=5, decimal_places=2)
     purchase_price_with_percentage = models.DecimalField(max_digits=12, decimal_places=2)
     total_price = models.DecimalField(max_digits=12, decimal_places=2)
+
 
     def __str__(self):
         return f"{self.product.part_no} ({self.purchase.invoice_no})"
