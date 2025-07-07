@@ -1,6 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import *
+from decimal import Decimal
 
 
 
@@ -30,11 +31,14 @@ def update_stock_product(sender, instance, created, **kwargs):
 
 
     if not created_stock:
-        stock.purchase_quantity += instance.purchase_quantity,
-        stock.current_stock_quantity += instance.purchase_quantity,
-        stock.purchase_price = instance.purchase_price,
-        stock.sale_price = instance.purchase_price_with_percentage,
-        stock.current_stock_value += instance.purchase_price * instance.purchase_quantity
+        pq = int(instance.purchase_quantity)
+        pp = Decimal(instance.purchase_price)
+        ppwp = Decimal(instance.purchase_price_with_percentage)
 
+        stock.purchase_quantity += pq
+        stock.current_stock_quantity += pq
+        stock.purchase_price = pp
+        stock.sale_price = ppwp
+        stock.current_stock_value += pp * pq
         stock.save()
 
