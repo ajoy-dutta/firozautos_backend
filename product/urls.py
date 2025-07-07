@@ -6,6 +6,7 @@ router = DefaultRouter()
 router.register('product-categories', ProductCategoryViewSet)
 router.register('products', ProductViewSet)
 router.register(r'supplier-purchases', SupplierPurchaseViewSet, basename='supplier-purchase')
+router.register(r'stocks', StockViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

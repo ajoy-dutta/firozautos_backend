@@ -20,4 +20,10 @@ class ProductViewSet(viewsets.ModelViewSet):
 class SupplierPurchaseViewSet(viewsets.ModelViewSet):
     queryset = SupplierPurchase.objects.all().order_by('-purchase_date')
     serializer_class = SupplierPurchaseSerializer
-    # permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+
+
+class StockViewSet(viewsets.ModelViewSet):
+    queryset = StockProduct.objects.all()
+    serializer_class = StockSerializer

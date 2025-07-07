@@ -121,3 +121,11 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+    
+
+
+class StockSerializer(serializers.ModelSerializer):
+     product = ProductSerializer(read_only=True)
+     class Meta:
+        model = StockProduct
+        fields = '__all__'
