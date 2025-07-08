@@ -31,10 +31,18 @@ class StockViewSet(viewsets.ModelViewSet):
     serializer_class = StockSerializer
 
 
+
 class SupplierPurchaseReturnViewSet(viewsets.ModelViewSet):
     queryset = SupplierPurchaseReturn.objects.all().order_by('-return_date')
     serializer_class = SupplierPurchaseReturnSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        invoice_no = self.request.query_params.get('invoice_no')
+        if invoice_no:
+            queryset = queryset.filter(purchase_product__purchase__invoice_no=invoice_no)
+        return queryset
 
     def perform_create(self, serializer):
         instance = serializer.save()

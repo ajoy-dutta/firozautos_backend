@@ -140,9 +140,15 @@ class StockSerializer(serializers.ModelSerializer):
 
 
 class SupplierPurchaseReturnSerializer(serializers.ModelSerializer):
+    purchase_product = PurchaseProductSerializer(read_only=True)
+    purchase_product_id = serializers.PrimaryKeyRelatedField(
+        queryset=PurchaseProduct.objects.all(),
+        source='purchase_product',
+        write_only=True
+    )
     class Meta:
         model = SupplierPurchaseReturn
-        fields = ['id', 'purchase_product', 'quantity', 'return_date']
+        fields = ['id', 'purchase_product', 'purchase_product_id', 'quantity', 'return_date', 'reason']
         read_only_fields = ['return_date']
 
     def validate(self, data):
