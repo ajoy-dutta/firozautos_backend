@@ -76,8 +76,8 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
         source='supplier',
         write_only=True
     )
-    total_returned_quantity = serializers.IntegerField(source='total_returned_quantity', read_only=True)
-    total_returned_value = serializers.DecimalField(source='total_returned_value', max_digits=12, decimal_places=2, read_only=True)
+    total_returned_quantity = serializers.IntegerField(read_only=True)
+    total_returned_value = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
 
     class Meta:
         model = SupplierPurchase
