@@ -76,6 +76,8 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
         source='supplier',
         write_only=True
     )
+    total_returned_quantity = serializers.IntegerField(source='total_returned_quantity', read_only=True)
+    total_returned_value = serializers.DecimalField(source='total_returned_value', max_digits=12, decimal_places=2, read_only=True)
 
     class Meta:
         model = SupplierPurchase
@@ -92,6 +94,8 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
             'products',
             'payments',
             'created_at',
+            'total_returned_quantity',
+            'total_returned_value',
         ]
         read_only_fields = ['created_at']
 
@@ -124,8 +128,28 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
     
 
 
+
+
 class StockSerializer(serializers.ModelSerializer):
      product = ProductSerializer(read_only=True)
      class Meta:
         model = StockProduct
         fields = '__all__'
+
+
+
+
+class SupplierPurchaseReturnSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupplierPurchaseReturn
+        fields = ['id', 'purchase_product', 'quantity', 'return_date']
+        read_only_fields = ['return_date']
+
+    def validate(self, data):
+        purchase_product = data['purchase_product']
+        quantity = data['quantity']
+        if quantity <= 0:
+            raise serializers.ValidationError('Return quantity must be positive.')
+        if quantity > (purchase_product.purchase_quantity - purchase_product.returned_quantity):
+            raise serializers.ValidationError('Cannot return more than purchased minus already returned.')
+        return data

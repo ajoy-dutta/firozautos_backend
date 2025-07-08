@@ -8,6 +8,7 @@ admin.site.register(PurchaseProduct)
 admin.site.register(PurchasePayment)
 admin.site.register(SupplierPurchase)
 admin.site.register(StockProduct)
+admin.site.register(SupplierPurchaseReturn)
 
 
 

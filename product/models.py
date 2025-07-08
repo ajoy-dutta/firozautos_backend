@@ -59,6 +59,16 @@ class SupplierPurchase(models.Model):
     total_payable_amount = models.DecimalField(max_digits=12, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # --- Return summary fields ---
+    @property
+    def total_returned_quantity(self):
+        return sum([p.returned_quantity for p in self.products.all()])
+
+    @property
+    def total_returned_value(self):
+        return sum([
+            p.returned_quantity * p.purchase_price for p in self.products.all()
+        ])
 
     def generate_invoice_no(self):
         last_id = SupplierPurchase.objects.all().order_by('-id').first()
@@ -85,10 +95,21 @@ class PurchaseProduct(models.Model):
     percentage = models.DecimalField(max_digits=5, decimal_places=2)
     purchase_price_with_percentage = models.DecimalField(max_digits=12, decimal_places=2)
     total_price = models.DecimalField(max_digits=12, decimal_places=2)
-
+    returned_quantity = models.PositiveIntegerField(default=0)  # New field for tracking returns
 
     def __str__(self):
         return f"{self.product.part_no} ({self.purchase.invoice_no})"
+
+
+
+
+class SupplierPurchaseReturn(models.Model):
+    purchase_product = models.ForeignKey(PurchaseProduct, related_name='returns', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    return_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Return {self.quantity} of {self.purchase_product} on {self.return_date}"  
 
 
 
