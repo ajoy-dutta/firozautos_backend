@@ -4,6 +4,7 @@ from .serializers import*
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 
 
@@ -29,6 +30,21 @@ class SupplierPurchaseViewSet(viewsets.ModelViewSet):
 class StockViewSet(viewsets.ModelViewSet):
     queryset = StockProduct.objects.all()
     serializer_class = StockSerializer
+
+    @action(detail=True, methods=['patch'], url_path='set-damage-quantity')
+    def set_damage_quantity(self, request, pk=None):
+        stock = self.get_object()
+        damage_quantity = request.data.get('damage_quantity')
+        if damage_quantity is None:
+            return Response({'error': 'damage_quantity is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            damage_quantity = int(damage_quantity)
+        except ValueError:
+            return Response({'error': 'damage_quantity must be an integer.'}, status=status.HTTP_400_BAD_REQUEST)
+        stock.damage_quantity = damage_quantity
+        stock.save()
+        serializer = self.get_serializer(stock)
+        return Response(serializer.data)
 
 
 
