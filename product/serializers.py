@@ -47,6 +47,7 @@ class PurchaseProductSerializer(serializers.ModelSerializer):
             'percentage',
             'purchase_price_with_percentage',
             'total_price',
+            'returned_quantity',
         ]
 
 
