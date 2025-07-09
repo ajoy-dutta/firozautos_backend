@@ -150,7 +150,7 @@ class SupplierPurchaseReturnSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = SupplierPurchaseReturn
-        fields = ['id', 'purchase_product', 'purchase_product_id', 'quantity', 'return_date', 'reason']
+        fields = ['id', 'purchase_product', 'purchase_product_id', 'quantity', 'return_date']
         read_only_fields = ['return_date']
 
     def validate(self, data):
