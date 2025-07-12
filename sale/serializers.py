@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Sale, SaleProduct, SalePayment
+from .models import Sale, SaleProduct, SalePayment, SaleReturn
 from person.models import Customer
 from person.serializers import CustomerSerializer
 from product.models import Product
@@ -88,3 +88,24 @@ class SaleSerializer(serializers.ModelSerializer):
         instance.total_payable_amount = validated_data.get('total_payable_amount', instance.total_payable_amount)
         instance.save()
         return instance 
+
+class SaleReturnSerializer(serializers.ModelSerializer):
+    sale_product = SaleProductSerializer(read_only=True)
+    sale_product_id = serializers.PrimaryKeyRelatedField(
+        queryset=SaleProduct.objects.all(),
+        source='sale_product',
+        write_only=True
+    )
+    class Meta:
+        model = SaleReturn
+        fields = ['id', 'sale_product', 'sale_product_id', 'quantity', 'return_date', 'reason']
+        read_only_fields = ['return_date']
+
+    def validate(self, data):
+        sale_product = data['sale_product']
+        quantity = data['quantity']
+        if quantity <= 0:
+            raise serializers.ValidationError('Return quantity must be positive.')
+        if quantity > (sale_product.sale_quantity - sale_product.returned_quantity):
+            raise serializers.ValidationError('Cannot return more than sold minus already returned.')
+        return data 

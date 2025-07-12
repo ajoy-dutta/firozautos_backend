@@ -38,9 +38,20 @@ class SaleProduct(models.Model):
     percentage = models.DecimalField(max_digits=5, decimal_places=2)
     sale_price_with_percentage = models.DecimalField(max_digits=12, decimal_places=2)
     total_price = models.DecimalField(max_digits=12, decimal_places=2)
+    returned_quantity = models.PositiveIntegerField(default=0)  # New field for tracking returns
 
     def __str__(self):
         return f"{self.product.part_no} ({self.sale.invoice_no})"
+
+
+class SaleReturn(models.Model):
+    sale_product = models.ForeignKey(SaleProduct, related_name='returns', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    return_date = models.DateTimeField(auto_now_add=True)
+    reason = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Return {self.quantity} of {self.sale_product} on {self.return_date}"
 
 class SalePayment(models.Model):
     sale = models.ForeignKey(Sale, related_name='payments', on_delete=models.CASCADE)
