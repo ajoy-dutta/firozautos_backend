@@ -1,7 +1,7 @@
 from django.db import models
 from person.models import Customer
 from product.models import Product
-from master.models import Company
+from master.models import Company, PaymentMode, BankMaster
 from django.utils import timezone
 
 class Sale(models.Model):
@@ -48,19 +48,21 @@ class SaleReturn(models.Model):
     sale_product = models.ForeignKey(SaleProduct, related_name='returns', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     return_date = models.DateTimeField(auto_now_add=True)
-    reason = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"Return {self.quantity} of {self.sale_product} on {self.return_date}"
 
+
+
 class SalePayment(models.Model):
     sale = models.ForeignKey(Sale, related_name='payments', on_delete=models.CASCADE)
-    payment_mode = models.CharField(max_length=100)
-    bank_name = models.CharField(max_length=255, blank=True, null=True)
+    payment_mode = models.ForeignKey(PaymentMode, on_delete=models.CASCADE)
+    bank_name = models.ForeignKey(BankMaster, on_delete=models.CASCADE, blank=True, null=True)
     account_no = models.CharField(max_length=100, blank=True, null=True)
     cheque_no = models.CharField(max_length=100, blank=True, null=True)
     paid_amount = models.DecimalField(max_digits=12, decimal_places=2)
     remarks = models.TextField(blank=True, null=True)
+    payment_date = models.DateTimeField(auto_now_add=True,blank=True,null=True)
 
     def __str__(self):
-        return f"Payment for {self.sale.invoice_no}"
+        return f"Payment for {self.sale.invoice_no} - {self.payment_mode.name}"

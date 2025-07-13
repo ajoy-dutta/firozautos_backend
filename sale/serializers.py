@@ -4,6 +4,8 @@ from person.models import Customer
 from person.serializers import CustomerSerializer
 from product.models import Product
 from product.serializers import ProductSerializer
+from master.models import PaymentMode, BankMaster
+from master.serializers import PaymentModeSerializer, BankMasterSerializer
 
 class SaleProductSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
@@ -28,17 +30,64 @@ class SaleProductSerializer(serializers.ModelSerializer):
         ]
 
 class SalePaymentSerializer(serializers.ModelSerializer):
+    sale = serializers.PrimaryKeyRelatedField(read_only=True)
+    sale_id = serializers.PrimaryKeyRelatedField(
+        queryset=Sale.objects.all(),
+        source='sale',
+        write_only=True
+    )
+    payment_mode = PaymentModeSerializer(read_only=True)
+    payment_mode_id = serializers.PrimaryKeyRelatedField(
+        queryset=PaymentMode.objects.all(),
+        source='payment_mode',
+        write_only=True
+    )
+    bank_name = BankMasterSerializer(read_only=True)
+    bank_name_id = serializers.PrimaryKeyRelatedField(
+        queryset=BankMaster.objects.all(),
+        source='bank_name',
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+
     class Meta:
         model = SalePayment
         fields = [
             'id',
+            'sale',
+            'sale_id',
             'payment_mode',
+            'payment_mode_id',
             'bank_name',
+            'bank_name_id',
             'account_no',
             'cheque_no',
             'paid_amount',
             'remarks',
+            'payment_date',
         ]
+        read_only_fields = ['payment_date']
+
+    def validate(self, data):
+        payment_mode = data.get('payment_mode')
+        bank_name = data.get('bank_name')
+        account_no = data.get('account_no')
+        cheque_no = data.get('cheque_no')
+        
+        # If payment mode requires bank details, validate them
+        if payment_mode and payment_mode.name.lower() in ['bank transfer', 'cheque', 'online']:
+            if not bank_name:
+                raise serializers.ValidationError("Bank name is required for this payment mode.")
+            if not account_no:
+                raise serializers.ValidationError("Account number is required for this payment mode.")
+        
+        # If cheque payment, validate cheque number
+        if payment_mode and payment_mode.name.lower() == 'cheque':
+            if not cheque_no:
+                raise serializers.ValidationError("Cheque number is required for cheque payments.")
+        
+        return data
 
 class SaleSerializer(serializers.ModelSerializer):
     products = SaleProductSerializer(many=True)
@@ -98,7 +147,7 @@ class SaleReturnSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = SaleReturn
-        fields = ['id', 'sale_product', 'sale_product_id', 'quantity', 'return_date', 'reason']
+        fields = ['id', 'sale_product', 'sale_product_id', 'quantity', 'return_date']
         read_only_fields = ['return_date']
 
     def validate(self, data):
