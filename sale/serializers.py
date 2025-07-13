@@ -29,6 +29,8 @@ class SaleProductSerializer(serializers.ModelSerializer):
             'total_price',
         ]
 
+
+
 class SalePaymentSerializer(serializers.ModelSerializer):
     sale = serializers.PrimaryKeyRelatedField(read_only=True)
     sale_id = serializers.PrimaryKeyRelatedField(
@@ -89,6 +91,8 @@ class SalePaymentSerializer(serializers.ModelSerializer):
         
         return data
 
+
+
 class SaleSerializer(serializers.ModelSerializer):
     products = SaleProductSerializer(many=True)
     payments = SalePaymentSerializer(many=True)
@@ -137,6 +141,8 @@ class SaleSerializer(serializers.ModelSerializer):
         instance.total_payable_amount = validated_data.get('total_payable_amount', instance.total_payable_amount)
         instance.save()
         return instance 
+
+
 
 class SaleReturnSerializer(serializers.ModelSerializer):
     sale_product = SaleProductSerializer(read_only=True)
