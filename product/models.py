@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from person.models import Supplier
 from master.models import Company
+from django.utils.timezone import now
 
 
 
@@ -153,3 +154,35 @@ class StockProduct(models.Model):
     def __str__(self):
         return f"{self.product.product_name} - {self.part_no}"
 
+class Order(models.Model):
+    order_no = models.CharField(max_length=30, unique=True, blank=True)
+    order_date = models.DateField(default=now)
+
+    def save(self, *args, **kwargs):
+        if not self.order_no:
+            today = now().strftime('%Y%m%d')
+            last_order = Order.objects.filter(order_no__startswith=f"ORD-{today}").order_by('id').last()
+            next_number = 1
+
+            if last_order:
+                try:
+                    last_no = last_order.order_no.split('-')[-1]
+                    next_number = int(last_no) + 1
+                except:
+                    pass
+
+            self.order_no = f"ORD-{today}-{next_number:03d}"
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.order_no
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.PositiveIntegerField()
+    order_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.product.product_name if self.product else 'No Product'} ({self.quantity})"
