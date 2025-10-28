@@ -3,6 +3,7 @@ from rest_framework import serializers
 from master.serializers import CompanySerializer
 from person.models import Supplier
 from person.serializers import SupplierSerializer
+from .models import Order, OrderItem, Product
 
 
 
@@ -159,3 +160,53 @@ class SupplierPurchaseReturnSerializer(serializers.ModelSerializer):
         if quantity > (purchase_product.purchase_quantity - purchase_product.returned_quantity):
             raise serializers.ValidationError('Cannot return more than purchased minus already returned.')
         return data
+
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product_details = ProductSerializer(source='product', read_only=True)
+    product_id = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), source='product')
+
+    class Meta:
+        model = OrderItem
+        fields = [
+            'id',
+            'product_id',        # for write
+            'quantity',
+            'order_price',
+            'product_details',   # for read
+        ]
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'order_no', 'order_date', 'items']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        order = Order.objects.create(**validated_data)
+        for item_data in items_data:
+            OrderItem.objects.create(order=order, **item_data)
+        return order
+
+    items = OrderItemSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'order_no', 'order_date', 'items']
+
+    items = OrderItemSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'order_no', 'order_date',  'items']
+        read_only_fields = ['order_no']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        order = Order.objects.create(**validated_data)
+        for item_data in items_data:
+            OrderItem.objects.create(order=order, **item_data)
+        return order

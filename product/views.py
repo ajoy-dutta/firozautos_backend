@@ -61,3 +61,9 @@ class SupplierPurchaseReturnViewSet(viewsets.ModelViewSet):
         if stock:
             stock.current_stock_quantity = max(stock.current_stock_quantity - instance.quantity, 0)
             stock.save()
+            
+            
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.prefetch_related('items__product').all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
