@@ -41,6 +41,7 @@ class SupplierTypeMasterViewSet(viewsets.ModelViewSet):
     serializer_class = SupplierTypeMasterSerializer
 
 
+
 class BankCategoryMasterViewSet(viewsets.ModelViewSet):
     queryset = BankCategoryMaster.objects.all()
     serializer_class = BankCategoryMasterSerializer
@@ -49,3 +50,14 @@ class BankCategoryMasterViewSet(viewsets.ModelViewSet):
 class BankMasterViewSet(viewsets.ModelViewSet):
     queryset = BankMaster.objects.all()
     serializer_class = BankMasterSerializer
+
+
+
+class AccountCategoryViewSet(viewsets.ModelViewSet):
+    queryset = AccountCategory.objects.all()
+    serializer_class = AccountCategorySerializer
+
+
+class BankAccountViewSet(viewsets.ModelViewSet):
+    queryset = BankAccount.objects.all()
+    serializer_class = BankAccountSerializer

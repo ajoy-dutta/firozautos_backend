@@ -47,7 +47,6 @@ class PurchaseProductSerializer(serializers.ModelSerializer):
             'percentage',
             'purchase_price_with_percentage',
             'total_price',
-            'returned_quantity',
         ]
 
 
@@ -133,7 +132,6 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
 
 class StockSerializer(serializers.ModelSerializer):
      product = ProductSerializer(read_only=True)
-     damage_quantity = serializers.IntegerField(required=False)
      class Meta:
         model = StockProduct
         fields = '__all__'

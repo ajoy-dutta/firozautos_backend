@@ -12,6 +12,8 @@ router.register('countries', CountryMasterViewSet)
 router.register('supplier-types', SupplierTypeMasterViewSet)
 router.register('bank-categories', BankCategoryMasterViewSet)
 router.register('banks', BankMasterViewSet)
+router.register('account-categories', AccountCategoryViewSet)
+router.register('bank-accounts', BankAccountViewSet)
 
 
 urlpatterns = [

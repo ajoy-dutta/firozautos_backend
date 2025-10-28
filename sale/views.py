@@ -7,7 +7,7 @@ from .serializers import SaleSerializer, SaleReturnSerializer, SalePaymentSerial
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from product.models import StockProduct
 
-# Create your views here.
+
 
 class SaleViewSet(viewsets.ModelViewSet):
     queryset = Sale.objects.all().order_by('-sale_date')
@@ -21,6 +21,8 @@ class SaleViewSet(viewsets.ModelViewSet):
         payments = sale.payments.all()
         serializer = SalePaymentSerializer(payments, many=True)
         return Response(serializer.data)
+
+
 
 class SalePaymentViewSet(viewsets.ModelViewSet):
     queryset = SalePayment.objects.all().order_by('-payment_date')
@@ -37,6 +39,8 @@ class SalePaymentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Create a new payment and associate it with the sale"""
         serializer.save()
+
+
 
 class SaleReturnViewSet(viewsets.ModelViewSet):
     queryset = SaleReturn.objects.all().order_by('-return_date')

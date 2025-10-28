@@ -68,3 +68,25 @@ class BankMaster(models.Model):
 
     def __str__(self):
         return self.name
+    
+
+
+class AccountCategory(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+    
+
+class BankAccount(models.Model):
+    accountCategory = models.CharField(max_length=100)
+    accountName = models.CharField(max_length=255)
+    bankName = models.CharField(max_length=255)
+    accountNo = models.CharField(max_length=50)
+    bankAddress = models.TextField()
+    bankContact = models.CharField(max_length=20)
+    bankMail = models.EmailField()
+    previousBalance = models.DecimalField(max_digits=15, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.bankName} - {self.accountName}"

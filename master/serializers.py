@@ -60,3 +60,15 @@ class BankMasterSerializer(serializers.ModelSerializer):
     class Meta:
         model = BankMaster
         fields = '__all__'
+
+
+class AccountCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AccountCategory
+        fields = '__all__'
+
+
+class BankAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BankAccount
+        fields = '__all__'
