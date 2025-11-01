@@ -8,6 +8,8 @@ router.register(r'exporters', ExporterViewSet)
 router.register(r'employees', EmployeeViewSet)
 router.register(r'customers', CustomerViewSet)
 router.register(r'suppliers', SupplierViewSet)
+router.register(r'borrowers', BorrowerViewSet)
+router.register(r'owe', OweViewSet)
 
 
 urlpatterns = [
