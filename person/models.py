@@ -145,3 +145,33 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.customer_name
+
+
+
+class Borrower(models.Model):
+    borrower_name = models.CharField(max_length=255)
+    borrower_type = models.CharField(max_length=100, blank=True, null=True)
+    phone1 = models.CharField(max_length=20)
+    phone2 = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField()
+    remarks = models.TextField(blank=True, null=True)
+    due_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.borrower_name - self.address
+    
+
+
+class Owed(models.Model):
+    owed_name = models.CharField(max_length=255)
+    owed_type = models.CharField(max_length=100, blank=True, null=True)
+    phone1 = models.CharField(max_length=20)
+    phone2 = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField()
+    remarks = models.TextField(blank=True, null=True)
+    due_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.owed_name - self.address

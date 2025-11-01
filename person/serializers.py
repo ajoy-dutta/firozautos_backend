@@ -56,7 +56,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-        
+       
 class SupplierSerializer(serializers.ModelSerializer):
     supplier_type_detail = SupplierTypeMasterSerializer(source='supplier_type', read_only=True)
     district_detail = DistrictMasterSerializer(source='district', read_only=True)
@@ -65,4 +65,18 @@ class SupplierSerializer(serializers.ModelSerializer):
         model = Supplier
         fields = '__all__'
 
+
+
+class BorrowerSerializer(serializers.ModelSerializer):
+    due_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    class Meta:
+        model = Borrower
+        fields = '__all__'
+
+
+class OweSerializer(serializers.ModelSerializer):
+    due_amount = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    class Meta:
+        model = Owed
+        fields = '__all__'
 

@@ -154,6 +154,11 @@ class StockProduct(models.Model):
     def __str__(self):
         return f"{self.product.product_name} - {self.part_no}"
 
+
+
+
+
+
 class Order(models.Model):
     order_no = models.CharField(max_length=30, unique=True, blank=True)
     order_date = models.DateField(default=now)
@@ -177,6 +182,8 @@ class Order(models.Model):
 
     def __str__(self):
         return self.order_no
+
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)

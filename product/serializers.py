@@ -177,6 +177,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
             'product_details',   # for read
         ]
 
+
+
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
 
@@ -191,22 +193,36 @@ class OrderSerializer(serializers.ModelSerializer):
             OrderItem.objects.create(order=order, **item_data)
         return order
 
-    items = OrderItemSerializer(many=True)
+    def update(self, instance, validated_data):
+        # Pop nested items data
+        items_data = validated_data.pop('items', [])
 
-    class Meta:
-        model = Order
-        fields = ['id', 'order_no', 'order_date', 'items']
+        # Update order fields
+        instance.order_no = validated_data.get('order_no', instance.order_no)
+        instance.order_date = validated_data.get('order_date', instance.order_date)
+        instance.save()
 
-    items = OrderItemSerializer(many=True)
+        # Handle nested items
+        existing_item_ids = [item.id for item in instance.items.all()]
+        new_item_ids = []
 
-    class Meta:
-        model = Order
-        fields = ['id', 'order_no', 'order_date',  'items']
-        read_only_fields = ['order_no']
-
-    def create(self, validated_data):
-        items_data = validated_data.pop('items')
-        order = Order.objects.create(**validated_data)
         for item_data in items_data:
-            OrderItem.objects.create(order=order, **item_data)
-        return order
+            item_id = item_data.get('id', None)
+            if item_id and item_id in existing_item_ids:
+                # Update existing item
+                item = OrderItem.objects.get(id=item_id, order=instance)
+                for attr, value in item_data.items():
+                    setattr(item, attr, value)
+                item.save()
+                new_item_ids.append(item_id)
+            else:
+                # Create new item
+                item = OrderItem.objects.create(order=instance, **item_data)
+                new_item_ids.append(item.id)
+
+        # Delete removed items
+        for item in instance.items.all():
+            if item.id not in new_item_ids:
+                item.delete()
+
+        return instance
