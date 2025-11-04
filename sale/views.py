@@ -6,6 +6,8 @@ from .models import Sale, SaleReturn, SaleProduct, SalePayment
 from .serializers import SaleSerializer, SaleReturnSerializer, SalePaymentSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from product.models import StockProduct
+from django.utils.dateparse import parse_date
+from django.db.models import Sum
 
 
 
@@ -14,9 +16,50 @@ class SaleViewSet(viewsets.ModelViewSet):
     serializer_class = SaleSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+   
+    def get_queryset(self):
+        queryset = super().get_queryset().prefetch_related('payments')
+        customer = self.request.query_params.get('customer')
+        from_date = self.request.query_params.get('from_date')
+        to_date = self.request.query_params.get('to_date')
+
+        if customer:
+            queryset = queryset.filter(customer_id=customer)
+        if from_date:
+            queryset = queryset.filter(sale_date__gte=parse_date(from_date))
+        if to_date:
+            queryset = queryset.filter(sale_date__lte=parse_date(to_date))
+
+        return queryset
+    
+
+
+    @action(detail=False, methods=['get'])
+    def report(self, request):
+        sales = self.get_queryset()
+        serializer = self.get_serializer(sales, many=True)
+
+        # Calculate totals
+        total_sales_amount = sales.aggregate(total=Sum('total_amount'))['total'] or 0
+        total_paid_amount = sum(
+            sum(payment.paid_amount for payment in sale.payments.all())
+            for sale in sales
+        )
+        total_due_amount = total_sales_amount - total_paid_amount
+
+        return Response({
+            "sales": serializer.data,
+            "summary": {
+                "total_sales_amount": total_sales_amount,
+                "total_paid_amount": total_paid_amount,
+                "total_due_amount": total_due_amount,
+            }
+        })
+    
+
+
     @action(detail=True, methods=['get'])
     def payments(self, request, pk=None):
-        """Get all payments for a specific sale"""
         sale = self.get_object()
         payments = sale.payments.all()
         serializer = SalePaymentSerializer(payments, many=True)
