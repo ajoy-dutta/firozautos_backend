@@ -3,11 +3,11 @@ from rest_framework import serializers
 from master.serializers import CompanySerializer
 from person.models import Supplier
 from person.serializers import SupplierSerializer
-from .models import Order, OrderItem, Product
 
 
-
-
+# ----------------------------
+# Category Serializer
+# ----------------------------
 class ProductCategorySerializer(serializers.ModelSerializer):
     company_detail = CompanySerializer(source='company', read_only=True)
 
@@ -16,18 +16,33 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'company', 'company_detail', 'category_name']
 
 
+# ----------------------------
+# Bike Model Serializer
+# ----------------------------
+class BikeModelSerializer(serializers.ModelSerializer):
+    company_detail = CompanySerializer(source="company", read_only=True)
+
+    class Meta:
+        model = BikeModel
+        fields = ["id", "company", "company_detail", "name", "image", "slug"]
 
 
+# ----------------------------
+# Product Serializer
+# ----------------------------
 class ProductSerializer(serializers.ModelSerializer):
     category_detail = ProductCategorySerializer(source='category', read_only=True)
+    company_detail = CompanySerializer(source='company', read_only=True)
+    bike_model_detail = BikeModelSerializer(source="bike_model", read_only=True)
 
     class Meta:
         model = Product
         fields = '__all__'
 
 
-
-
+# ----------------------------
+# Purchase Product Serializer
+# ----------------------------
 class PurchaseProductSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
@@ -51,8 +66,9 @@ class PurchaseProductSerializer(serializers.ModelSerializer):
         ]
 
 
-
-
+# ----------------------------
+# Purchase Payment Serializer
+# ----------------------------
 class PurchasePaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchasePayment
@@ -66,8 +82,9 @@ class PurchasePaymentSerializer(serializers.ModelSerializer):
         ]
 
 
-
-
+# ----------------------------
+# Supplier Purchase Serializer
+# ----------------------------
 class SupplierPurchaseSerializer(serializers.ModelSerializer):
     products = PurchaseProductSerializer(many=True)
     payments = PurchasePaymentSerializer(many=True)
@@ -103,7 +120,6 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         products_data = validated_data.pop('products')
         payments_data = validated_data.pop('payments')
-
         purchase = SupplierPurchase.objects.create(**validated_data)
 
         for product in products_data:
@@ -115,7 +131,6 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
         return purchase
 
     def update(self, instance, validated_data):
-        # Optional: handle update of nested, here we'll just update main fields
         instance.supplier = validated_data.get('supplier', instance.supplier)
         instance.company_name = validated_data.get('company_name', instance.company_name)
         instance.purchase_date = validated_data.get('purchase_date', instance.purchase_date)
@@ -124,22 +139,23 @@ class SupplierPurchaseSerializer(serializers.ModelSerializer):
         instance.discount_amount = validated_data.get('discount_amount', instance.discount_amount)
         instance.total_payable_amount = validated_data.get('total_payable_amount', instance.total_payable_amount)
         instance.save()
-
         return instance
-    
 
 
-
-
+# ----------------------------
+# Stock Serializer
+# ----------------------------
 class StockSerializer(serializers.ModelSerializer):
-     product = ProductSerializer(read_only=True)
-     class Meta:
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
         model = StockProduct
         fields = '__all__'
 
 
-
-
+# ----------------------------
+# Supplier Purchase Return Serializer
+# ----------------------------
 class SupplierPurchaseReturnSerializer(serializers.ModelSerializer):
     purchase_product = PurchaseProductSerializer(read_only=True)
     purchase_product_id = serializers.PrimaryKeyRelatedField(
@@ -147,6 +163,7 @@ class SupplierPurchaseReturnSerializer(serializers.ModelSerializer):
         source='purchase_product',
         write_only=True
     )
+
     class Meta:
         model = SupplierPurchaseReturn
         fields = ['id', 'purchase_product', 'purchase_product_id', 'quantity', 'return_date']
@@ -162,7 +179,9 @@ class SupplierPurchaseReturnSerializer(serializers.ModelSerializer):
         return data
 
 
-
+# ----------------------------
+# Order Item Serializer
+# ----------------------------
 class OrderItemSerializer(serializers.ModelSerializer):
     product_details = ProductSerializer(source='product', read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), source='product')
@@ -171,14 +190,16 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = [
             'id',
-            'product_id',        # for write
+            'product_id',
             'quantity',
             'order_price',
-            'product_details',   # for read
+            'product_details',
         ]
 
 
-
+# ----------------------------
+# Order Serializer
+# ----------------------------
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
 
@@ -194,33 +215,26 @@ class OrderSerializer(serializers.ModelSerializer):
         return order
 
     def update(self, instance, validated_data):
-        # Pop nested items data
         items_data = validated_data.pop('items', [])
-
-        # Update order fields
         instance.order_no = validated_data.get('order_no', instance.order_no)
         instance.order_date = validated_data.get('order_date', instance.order_date)
         instance.save()
 
-        # Handle nested items
         existing_item_ids = [item.id for item in instance.items.all()]
         new_item_ids = []
 
         for item_data in items_data:
             item_id = item_data.get('id', None)
             if item_id and item_id in existing_item_ids:
-                # Update existing item
                 item = OrderItem.objects.get(id=item_id, order=instance)
                 for attr, value in item_data.items():
                     setattr(item, attr, value)
                 item.save()
                 new_item_ids.append(item_id)
             else:
-                # Create new item
                 item = OrderItem.objects.create(order=instance, **item_data)
                 new_item_ids.append(item.id)
 
-        # Delete removed items
         for item in instance.items.all():
             if item.id not in new_item_ids:
                 item.delete()
