@@ -10,7 +10,7 @@ router.register(r'product-categories', ProductCategoryViewSet)
 router.register(r'products', ProductViewSet)
 router.register(r'bike-models', BikeModelViewSet)  # ✅ NEW
 router.register(r'supplier-purchases', SupplierPurchaseViewSet)
-router.register(r'stock', StockViewSet)
+router.register(r'stocks', StockViewSet)
 router.register(r'supplier-purchase-returns', SupplierPurchaseReturnViewSet)
 router.register(r'orders', OrderViewSet)
 
