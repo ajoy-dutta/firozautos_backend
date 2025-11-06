@@ -20,11 +20,14 @@ class SaleViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset().prefetch_related('payments')
         customer = self.request.query_params.get('customer')
+        company = self.request.query_params.get('company')
         from_date = self.request.query_params.get('from_date')
         to_date = self.request.query_params.get('to_date')
 
         if customer:
             queryset = queryset.filter(customer_id=customer)
+        if company:
+            queryset = queryset.filter(company_name=company)
         if from_date:
             queryset = queryset.filter(sale_date__gte=parse_date(from_date))
         if to_date:

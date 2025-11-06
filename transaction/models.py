@@ -96,7 +96,7 @@ class Income(models.Model):
     ]
 
     date = models.DateField()
-    receiptNo = models.CharField(max_length=100)
+    voucherNo = models.CharField(max_length=100)
     accountTitle = models.CharField(max_length=200)
     sourceCategory = models.CharField(max_length=50, choices=COST_CATEGORIES)
     employeeName = models.CharField(max_length=100, blank=True, null=True)
