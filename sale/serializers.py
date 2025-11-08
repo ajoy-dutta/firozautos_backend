@@ -2,10 +2,11 @@ from rest_framework import serializers
 from .models import Sale, SaleProduct, SalePayment, SaleReturn
 from person.models import Customer
 from person.serializers import CustomerSerializer
-from product.models import Product
+from product.models import Product, StockProduct
 from product.serializers import ProductSerializer
 from master.models import PaymentMode, BankMaster
 from master.serializers import PaymentModeSerializer, BankMasterSerializer
+from django.db import transaction
 
 class SaleProductSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
@@ -29,21 +30,28 @@ class SaleProductSerializer(serializers.ModelSerializer):
             'total_price',
         ]
 
+    def validate(self, data):
+        sale_quantity = data.get('sale_quantity')
+        product = data.get('product')
+        part_no = data.get('part_no')
+
+        stock = StockProduct.objects.filter(product=product, part_no=part_no).first()
+
+        if not stock:
+          raise serializers.ValidationError(f"No stock record found for {product} ({part_no}).")
+
+        if stock.current_stock_quantity < sale_quantity:
+            raise serializers.ValidationError(
+                f"Insufficient stock! Only {stock.current_stock_quantity} available."
+            )
+        
+        return data
+
+       
+
 
 
 class SalePaymentSerializer(serializers.ModelSerializer):
-    sale = serializers.PrimaryKeyRelatedField(read_only=True)
-    sale_id = serializers.PrimaryKeyRelatedField(
-        queryset=Sale.objects.all(),
-        source='sale',
-        write_only=True
-    )
-    payment_mode = PaymentModeSerializer(read_only=True)
-    payment_mode_id = serializers.PrimaryKeyRelatedField(
-        queryset=PaymentMode.objects.all(),
-        source='payment_mode',
-        write_only=True
-    )
     bank_name = BankMasterSerializer(read_only=True)
     bank_name_id = serializers.PrimaryKeyRelatedField(
         queryset=BankMaster.objects.all(),
@@ -57,10 +65,7 @@ class SalePaymentSerializer(serializers.ModelSerializer):
         model = SalePayment
         fields = [
             'id',
-            'sale',
-            'sale_id',
             'payment_mode',
-            'payment_mode_id',
             'bank_name',
             'bank_name_id',
             'account_no',
@@ -78,14 +83,14 @@ class SalePaymentSerializer(serializers.ModelSerializer):
         cheque_no = data.get('cheque_no')
         
         # If payment mode requires bank details, validate them
-        if payment_mode and payment_mode.name.lower() in ['bank transfer', 'cheque', 'online']:
+        if payment_mode and payment_mode.lower() in ['bank transfer', 'cheque', 'online']:
             if not bank_name:
                 raise serializers.ValidationError("Bank name is required for this payment mode.")
             if not account_no:
                 raise serializers.ValidationError("Account number is required for this payment mode.")
         
         # If cheque payment, validate cheque number
-        if payment_mode and payment_mode.name.lower() == 'cheque':
+        if payment_mode and payment_mode.lower() == 'cheque':
             if not cheque_no:
                 raise serializers.ValidationError("Cheque number is required for cheque payments.")
         
@@ -119,28 +124,24 @@ class SaleSerializer(serializers.ModelSerializer):
             'payments',
             'created_at',
         ]
-        read_only_fields = ['created_at']
+        read_only_fields = ['invoice_no', 'created_at']
 
+    @transaction.atomic
     def create(self, validated_data):
-        products_data = validated_data.pop('products')
-        payments_data = validated_data.pop('payments')
+        products_data = validated_data.pop('products', [])
+        payments_data = validated_data.pop('payments', [])
         sale = Sale.objects.create(**validated_data)
-        for product in products_data:
-            SaleProduct.objects.create(sale=sale, **product)
-        for payment in payments_data:
-            SalePayment.objects.create(sale=sale, **payment)
+
+        # Create SaleProduct records
+        for product_data in products_data:
+            SaleProduct.objects.create(sale=sale, **product_data)
+
+        # Create SalePayment records
+        for payment_data in payments_data:
+            SalePayment.objects.create(sale=sale, **payment_data)
+
         return sale
 
-    def update(self, instance, validated_data):
-        instance.customer = validated_data.get('customer', instance.customer)
-        instance.company_name = validated_data.get('company_name', instance.company_name)
-        instance.sale_date = validated_data.get('sale_date', instance.sale_date)
-        instance.invoice_no = validated_data.get('invoice_no', instance.invoice_no)
-        instance.total_amount = validated_data.get('total_amount', instance.total_amount)
-        instance.discount_amount = validated_data.get('discount_amount', instance.discount_amount)
-        instance.total_payable_amount = validated_data.get('total_payable_amount', instance.total_payable_amount)
-        instance.save()
-        return instance 
 
 
 
