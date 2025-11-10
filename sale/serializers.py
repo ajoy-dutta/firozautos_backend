@@ -107,6 +107,7 @@ class SaleSerializer(serializers.ModelSerializer):
         source='customer',
         write_only=True
     )
+    
 
     class Meta:
         model = Sale
