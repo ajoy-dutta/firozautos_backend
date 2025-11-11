@@ -15,4 +15,5 @@ urlpatterns = [
 
     path('purchase/', PurchaseEntryListCreateView.as_view(), name='purchase-entry-list-create'),
     path('purchase/<int:pk>/', PurchaseEntryDetailView.as_view(), name='purchase-entry-detail'),
+    path('purchase-report/', CombinedPurchaseView.as_view(), name="purchase-report"),
 ]

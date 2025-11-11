@@ -57,7 +57,7 @@ def update_stock_on_purchase(sender, instance, created, **kwargs):
         purchase_price = Decimal(instance.purchase_price)
 
         try:
-            product = Product.objects.get(part_no=part_no)
+            product = Product.objects.get(company__company_name=company_name, part_no=part_no)
         except Product.DoesNotExist:
             return
 

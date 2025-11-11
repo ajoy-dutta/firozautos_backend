@@ -67,6 +67,8 @@ class BikeModel(models.Model):
     def __str__(self):
         return f"{self.company.company_name} - {self.name}"
 
+
+
 class SupplierPurchase(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     company_name = models.CharField(max_length=255)
@@ -104,6 +106,7 @@ class SupplierPurchase(models.Model):
 
 
 
+
 class PurchaseProduct(models.Model):
     purchase = models.ForeignKey(SupplierPurchase, related_name='products', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
@@ -131,7 +134,6 @@ class SupplierPurchaseReturn(models.Model):
 
 
 
-
 class PurchasePayment(models.Model):
     purchase = models.ForeignKey(SupplierPurchase, related_name='payments', on_delete=models.CASCADE)
     payment_mode = models.CharField(max_length=100)
@@ -143,7 +145,6 @@ class PurchasePayment(models.Model):
     def __str__(self):
         return f"Payment for {self.purchase.invoice_no}"
     
-
 
 
 
@@ -170,7 +171,6 @@ class StockProduct(models.Model):
 
     def __str__(self):
         return f"{self.product.product_name} - {self.part_no}"
-
 
 
 
