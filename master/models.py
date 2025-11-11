@@ -9,7 +9,7 @@ class Company(models.Model):
     email = models.EmailField()
     address = models.TextField()
     country = models.CharField(max_length=100)
-
+    image          = models.ImageField(upload_to="company_logos/", blank=True, null=True)
     def __str__(self):
         return self.company_name
     
