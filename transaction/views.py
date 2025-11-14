@@ -1,5 +1,9 @@
 from rest_framework import generics, viewsets
 from .models import *
+from product.models import Product, StockProduct
+from master.models import Company
+import pandas as pd
+from django.db import transaction
 from .serializers import *
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.utils.dateparse import parse_date
@@ -79,8 +83,6 @@ class IncomeViewset(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-
-
 class CombinedPurchaseView(APIView):
     def get(self, request):
 
@@ -91,6 +93,8 @@ class CombinedPurchaseView(APIView):
         purchases = SupplierPurchase.objects.prefetch_related("products__product", "supplier").all()
         grouped_data = []
 
+        print("purchases",purchases)
+
 
         if company:
             purchases = purchases.filter(company_name__iexact=company)
@@ -98,6 +102,9 @@ class CombinedPurchaseView(APIView):
             purchases = purchases.filter(purchase_date__gte=parse_date(from_date))
         if to_date:
             purchases = purchases.filter(purchase_date__lte=parse_date(to_date))
+
+        
+        print("purchases",purchases)
 
 
         for purchase in purchases:
@@ -134,25 +141,33 @@ class CombinedPurchaseView(APIView):
             })
 
 
-        purchase_entries = PurchaseEntry.objects.all()
+        # purchase_entries = PurchaseEntry.objects.all()
 
-        if company:
-            purchase_entries = purchase_entries.filter(company_name__iexact=company)
-        if from_date:
-            purchase_entries = purchase_entries.filter(purchase_date__gte=parse_date(from_date))
-        if to_date:
-            purchase_entries = purchase_entries.filter(purchase_date__lte=parse_date(to_date))
+        # if company:
+        #     purchase_entries = purchase_entries.filter(company_name__iexact=company)
+        # if from_date:
+        #     purchase_entries = purchase_entries.filter(purchase_date__gte=parse_date(from_date))
+        # if to_date:
+        #     purchase_entries = purchase_entries.filter(purchase_date__lte=parse_date(to_date))
 
-        for pe in purchase_entries:
-            grouped_data.append({
-                "date": pe.purchase_date,
-                "invoice_no": pe.invoice_no,
-                "part_no": pe.part_no,
-                "product_name": "",  # No FK to Product
-                "supplier_or_exporter": pe.exporter_name,
-                "quantity": pe.quantity,
-                "purchase_amount": pe.total_price,
-            })
+        # for pe in purchase_entries:
+        #     try:
+        #         product = Product.objects.get(part_no=pe.part_no)
+        #         product_name = product.product_name
+        #     except Product.DoesNotExist:
+        #         product_name = "—" 
+        #     except Product.MultipleObjectsReturned:
+        #         product_name = Product.objects.filter(part_no=pe.part_no).first().product_name
+
+        #     grouped_data.append({
+        #         "date": pe.purchase_date,
+        #         "invoice_no": pe.invoice_no,
+        #         "part_no": pe.part_no,
+        #         "product_name": product_name,  
+        #         "supplier_or_exporter": pe.exporter_name,
+        #         "quantity": pe.quantity,
+        #         "purchase_amount": pe.total_price,
+        #     })
 
         print("Grouped Data", grouped_data)
 
@@ -162,3 +177,121 @@ class CombinedPurchaseView(APIView):
         serializer = CombinedPurchaseSerializer(grouped_data, many=True)
         return Response(serializer.data)
 
+
+
+
+
+def create_purchase_entry(data):
+    
+    company = Company.objects.get(id=data["company_id"])
+
+    entry = PurchaseEntry.objects.create(
+        invoice_no=data["invoice_no"],
+        purchase_date=data["purchase_date"],
+        exporter_name=data["exporter_name"],
+        company_name=company.company_name,
+        part_no=data["part_no"],
+        total_price=data["total_price"],
+        quantity=data["quantity"],
+        purchase_price=data["purchase_price"],
+    )
+    return entry
+
+
+class UploadStockExcelView(APIView):
+    def post(self, request):
+        file = request.FILES.get("xl_file")
+        company_id = request.data.get("company_name")
+        exporter_name = request.data.get("exporter_name")
+        invoice_no = request.data.get("invoice_no", "AUTO GENERATE")
+        purchase_date = request.data.get("purchase_date")
+        total_price = request.data.get("total_price", 0)
+
+
+        try:
+            company = Company.objects.get(id=company_id)
+        except Company.DoesNotExist:
+            return Response({"error": "No Company Selected or Founded"}, status=400)
+
+        if not file:
+            return Response({"error": "No file uploaded"}, status=400)
+
+        if not file.name.endswith((".xlsx")):
+            return Response({"error": "Please upload an .xlsx file"}, status=400)
+
+        try:
+            df = pd.read_excel(file, engine='openpyxl')
+        except Exception as e:
+            return Response({"error": f"Invalid Excel file: {str(e)}"}, status=400)
+
+        required_cols = ["product_name", "part_no", "category", "price", "quantity", "gross"]
+
+        for col in required_cols:
+            if col not in df.columns:
+                return Response({"error": f"Missing column: {col}"}, status=400)
+
+        created_stocks = []
+
+        with transaction.atomic():
+            for _, row in df.iterrows():
+                part_no = str(row["part_no"]).strip()
+                price = float(row["price"])
+                quantity = int(row["quantity"])
+                gross = float(row["gross"])
+
+                try:
+                    product = Product.objects.get(part_no=part_no)
+                except Product.DoesNotExist:
+                    continue
+
+                # Update Product MRP
+                if product:
+                    product.product_mrp = price
+                    product.save()
+
+                # Update or Create StockProduct
+                stock, created = StockProduct.objects.get_or_create(
+                    product=product,
+                    part_no=part_no,
+                    defaults={
+                        "company_name":company.company_name,
+                        "purchase_quantity": quantity,
+                        "sale_quantity": 0,
+                        "damage_quantity": 0,
+                        "current_stock_quantity": quantity,
+                        "purchase_price": price,
+                        "sale_price": price,
+                        "current_stock_value": gross
+                    }
+                )
+
+                # Update stock quantities
+                stock.purchase_quantity += quantity
+                stock.current_stock_quantity += quantity
+                stock.purchase_price = price
+                stock.current_stock_value = stock.current_stock_quantity * price
+                stock.save()
+
+
+                create_purchase_entry({
+                    "invoice_no": invoice_no,
+                    "purchase_date": purchase_date,
+                    "exporter_name": exporter_name,
+                    "company_id": company_id, 
+                    "part_no": part_no,
+                    "total_price": gross,
+                    "quantity": quantity,
+                    "purchase_price": price,
+                })
+
+                created_stocks.append({
+                    "product": product.product_name,
+                    "part_no": product.part_no,
+                    "added_quantity": quantity,
+                    "updated_mrp": price,
+                })
+
+        return Response({
+            "message": "Stock uploaded successfully",
+            "items": created_stocks
+        }, status=200)

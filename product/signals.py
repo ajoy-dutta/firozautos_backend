@@ -17,6 +17,8 @@ def update_stock_product(sender, instance, created, **kwargs):
     part_no = instance.part_no
     product = instance.product
 
+    
+
     stock, created_stock = StockProduct.objects.get_or_create(
         company_name = company_name,
         part_no = part_no,

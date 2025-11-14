@@ -2,7 +2,6 @@ from rest_framework import viewsets, status, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-
 from .models import *
 from .serializers import *
 

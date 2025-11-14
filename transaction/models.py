@@ -3,7 +3,6 @@ from django.db import models
 
 
 class Loan(models.Model):
-
     date = models.DateField()
     source_category = models.CharField(max_length=100)
     bank_category = models.CharField(max_length=100)
