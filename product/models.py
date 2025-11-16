@@ -27,7 +27,6 @@ class Product(models.Model):
     model_no = models.CharField(max_length=100, blank=True, null=True)
     bike_model = models.ForeignKey("product.BikeModel", on_delete=models.SET_NULL, blank=True,null=True,related_name="products") 
     net_weight = models.DecimalField(max_digits=12, decimal_places=3, default=0)
-    remarks = models.CharField(max_length=100, blank=True, null=True) 
     product_mrp = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     percentage = models.DecimalField(max_digits=12, decimal_places=3, default=0)
     product_bdt = models.DecimalField(max_digits=12, decimal_places=3, default=0)
@@ -179,6 +178,7 @@ class StockProduct(models.Model):
 class Order(models.Model):
     order_no = models.CharField(max_length=30, unique=True, blank=True)
     order_date = models.DateField(default=now)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='orders')
 
     def save(self, *args, **kwargs):
         if not self.order_no:
