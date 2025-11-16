@@ -48,7 +48,22 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return instance
     
 
+class EmployeeAttendanceSerializer(serializers.ModelSerializer):
+    employee_name = serializers.CharField(source="employee.employee_name", read_only=True)
+    employee_code = serializers.CharField(source="employee.employee_code", read_only=True)
 
+    class Meta:
+        model = EmployeeAttendance
+        fields = "__all__"
+        
+        
+class EmployeeSalaryTransactionSerializer(serializers.ModelSerializer):
+    employee_name = serializers.CharField(source="employee.employee_name", read_only=True)
+    employee_code = serializers.CharField(source="employee.employee_code", read_only=True)
+
+    class Meta:
+        model = EmployeeSalaryTransaction
+        fields = "__all__"
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
