@@ -11,6 +11,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from product.models import SupplierPurchase
 from .serializers import CombinedPurchaseSerializer
+from decimal import Decimal
+
 
 
 
@@ -29,16 +31,16 @@ class LoanDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 
-class PurchaseEntryListCreateView(generics.ListCreateAPIView):
-    queryset = PurchaseEntry.objects.all().order_by('-purchase_date')
-    serializer_class = PurchaseEntrySerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+# class PurchaseEntryListCreateView(generics.ListCreateAPIView):
+#     queryset = PurchaseEntry.objects.all().order_by('-purchase_date')
+#     serializer_class = PurchaseEntrySerializer
+#     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
-class PurchaseEntryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = PurchaseEntry.objects.all()
-    serializer_class = PurchaseEntrySerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+# class PurchaseEntryDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = PurchaseEntry.objects.all()
+#     serializer_class = PurchaseEntrySerializer
+#     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 
@@ -182,20 +184,62 @@ class CombinedPurchaseView(APIView):
 
 
 def create_purchase_entry(data):
-    
-    company = Company.objects.get(id=data["company_id"])
+    try:
+        company = Company.objects.get(id=data["company_id"])
+    except Company.DoesNotExist:
+        raise ValueError("Company not found")
 
-    entry = PurchaseEntry.objects.create(
+    # Get or create the Purchase
+    purchase, created = Purchase.objects.get_or_create(
         invoice_no=data["invoice_no"],
-        purchase_date=data["purchase_date"],
-        exporter_name=data["exporter_name"],
-        company_name=company.company_name,
+        defaults={
+            "purchase_date": data["purchase_date"],
+            "exporter_name": data["exporter_name"],
+            "company_name": company.company_name,
+        }
+    )
+
+    # Create PurchaseItem
+    purchase_item = PurchaseItem.objects.create(
+        purchase=purchase,
         part_no=data["part_no"],
-        total_price=data["total_price"],
         quantity=data["quantity"],
         purchase_price=data["purchase_price"],
+        total_price=data["total_price"],
     )
-    return entry
+
+    return purchase_item
+
+
+
+
+def update_stock(product, company_name, quantity, price):
+
+    stock, created = StockProduct.objects.get_or_create(
+        product=product,
+        part_no=product.part_no,
+        defaults={
+            "company_name": company_name,
+            "purchase_quantity": quantity,
+            "sale_quantity": 0,
+            "damage_quantity": 0,
+            "current_stock_quantity": quantity,
+            "purchase_price": price,
+            "sale_price": price,
+            "current_stock_value": quantity * price,
+        }
+    )
+
+    
+
+    if not created:
+        stock.purchase_quantity += quantity
+        stock.current_stock_quantity += quantity
+        stock.purchase_price = price
+        stock.current_stock_value += Decimal(quantity) * Decimal(price)
+        stock.save()
+
+    return stock
 
 
 class UploadStockExcelView(APIView):
@@ -203,29 +247,28 @@ class UploadStockExcelView(APIView):
         file = request.FILES.get("xl_file")
         company_id = request.data.get("company_name")
         exporter_name = request.data.get("exporter_name")
-        invoice_no = request.data.get("invoice_no", "AUTO GENERATE")
+        invoice_no = request.data.get("invoice_no", "AUTO_GENERATE")
         purchase_date = request.data.get("purchase_date")
-        total_price = request.data.get("total_price", 0)
 
-
+        # Validate company
         try:
             company = Company.objects.get(id=company_id)
         except Company.DoesNotExist:
-            return Response({"error": "No Company Selected or Founded"}, status=400)
+            return Response({"error": "No Company Selected or Found"}, status=400)
 
+        # Validate file
         if not file:
             return Response({"error": "No file uploaded"}, status=400)
-
-        if not file.name.endswith((".xlsx")):
+        if not file.name.endswith(".xlsx"):
             return Response({"error": "Please upload an .xlsx file"}, status=400)
 
+        # Read Excel
         try:
-            df = pd.read_excel(file, engine='openpyxl')
+            df = pd.read_excel(file, engine="openpyxl")
         except Exception as e:
             return Response({"error": f"Invalid Excel file: {str(e)}"}, status=400)
 
         required_cols = ["product_name", "part_no", "category", "price", "quantity", "gross"]
-
         for col in required_cols:
             if col not in df.columns:
                 return Response({"error": f"Missing column: {col}"}, status=400)
@@ -244,44 +287,23 @@ class UploadStockExcelView(APIView):
                 except Product.DoesNotExist:
                     continue
 
-                # Update Product MRP
-                if product:
-                    product.product_mrp = price
-                    product.save()
+                # Update product MRP
+                product.product_mrp = price
+                product.save()
 
-                # Update or Create StockProduct
-                stock, created = StockProduct.objects.get_or_create(
-                    product=product,
-                    part_no=part_no,
-                    defaults={
-                        "company_name":company.company_name,
-                        "purchase_quantity": quantity,
-                        "sale_quantity": 0,
-                        "damage_quantity": 0,
-                        "current_stock_quantity": quantity,
-                        "purchase_price": price,
-                        "sale_price": price,
-                        "current_stock_value": gross
-                    }
-                )
+                # Update stock using the helper function
+                update_stock(product, company.company_name, quantity, price)
 
-                # Update stock quantities
-                stock.purchase_quantity += quantity
-                stock.current_stock_quantity += quantity
-                stock.purchase_price = price
-                stock.current_stock_value = stock.current_stock_quantity * price
-                stock.save()
-
-
+                # Create purchase entry
                 create_purchase_entry({
                     "invoice_no": invoice_no,
                     "purchase_date": purchase_date,
                     "exporter_name": exporter_name,
-                    "company_id": company_id, 
+                    "company_id": company_id,
                     "part_no": part_no,
-                    "total_price": gross,
                     "quantity": quantity,
                     "purchase_price": price,
+                    "total_price": gross,
                 })
 
                 created_stocks.append({

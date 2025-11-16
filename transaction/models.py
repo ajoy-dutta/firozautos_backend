@@ -25,22 +25,49 @@ class Loan(models.Model):
     
 
 
-
-
-class PurchaseEntry(models.Model):
-    invoice_no = models.CharField(max_length=100, default='AUTO GENERATE')
+class Purchase(models.Model):
+    invoice_no = models.CharField(max_length=100, unique=True)
     purchase_date = models.DateField()
     exporter_name = models.CharField(max_length=255)
     company_name = models.CharField(max_length=255)
-    part_no = models.CharField(max_length=100)
-    total_price = models.DecimalField(max_digits=12, decimal_places=2)
-    quantity = models.PositiveIntegerField()
-    purchase_price = models.DecimalField(max_digits=12, decimal_places=2)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Invoice: {self.invoice_no} on {self.purchase_date}"
+        return f"{self.invoice_no} ({self.purchase_date})"
+
+
+
+class PurchaseItem(models.Model):
+    purchase = models.ForeignKey(
+        Purchase,
+        related_name="items",
+        on_delete=models.CASCADE
+    )
+
+    part_no = models.CharField(max_length=100)
+    quantity = models.PositiveIntegerField()
+    purchase_price = models.DecimalField(max_digits=12, decimal_places=2)
+    total_price = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.part_no} - Qty {self.quantity}"
+
+
+
+# class PurchaseEntry(models.Model):
+#     invoice_no = models.CharField(max_length=100, default='AUTO GENERATE')
+#     purchase_date = models.DateField()
+#     exporter_name = models.CharField(max_length=255)
+#     company_name = models.CharField(max_length=255)
+#     part_no = models.CharField(max_length=100)
+#     total_price = models.DecimalField(max_digits=12, decimal_places=2)
+#     quantity = models.PositiveIntegerField()
+#     purchase_price = models.DecimalField(max_digits=12, decimal_places=2)
+
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+    # def __str__(self):
+    #     return f"Invoice: {self.invoice_no} on {self.purchase_date}"
     
 
 

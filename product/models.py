@@ -178,7 +178,7 @@ class StockProduct(models.Model):
 class Order(models.Model):
     order_no = models.CharField(max_length=30, unique=True, blank=True)
     order_date = models.DateField(default=now)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='orders')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='orders',blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.order_no:

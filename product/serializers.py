@@ -202,10 +202,13 @@ class OrderItemSerializer(serializers.ModelSerializer):
 # ----------------------------
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
+    company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all())
+    company_name = serializers.CharField(source='company.company_name', read_only=True)
+
 
     class Meta:
         model = Order
-        fields = ['id', 'order_no', 'order_date','company' 'items']
+        fields = ['id', 'order_no', 'order_date','company','company_name', 'items']
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
