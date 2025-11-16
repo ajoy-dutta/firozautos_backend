@@ -89,7 +89,68 @@ class Employee(models.Model):
     def __str__(self):
         return self.employee_name
 
+#employee attendance model
+class EmployeeAttendance(models.Model):
+    STATUS_CHOICES = [
+        ("present", "Present"),
+        ("absent", "Absent"),
+        ("leave", "Leave"),
+    ]
 
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="attendances"
+    )
+    date = models.DateField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    in_time = models.TimeField(null=True, blank=True)
+    out_time = models.TimeField(null=True, blank=True)
+    remarks = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("employee", "date")  # same employee, same date only once
+        ordering = ["-date"]
+
+    def __str__(self):
+        return f"{self.employee.employee_name} - {self.date} - {self.status}"
+    
+    
+    
+    
+class EmployeeSalaryTransaction(models.Model):
+    TRANSACTION_TYPES = [
+        ("advance", "Advance"),
+        ("salary", "Salary Payment"),
+    ]
+
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="salary_transactions"
+    )
+    date = models.DateField()
+    year = models.IntegerField()
+    month = models.IntegerField()  # 1-12
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    remarks = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-year", "-month", "-date"]
+
+    def save(self, *args, **kwargs):
+        # Auto-fill year, month from date if not provided
+        if self.date and (not self.year or not self.month):
+            self.year = self.date.year
+            self.month = self.date.month
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.employee.employee_name} - {self.get_transaction_type_display()} - {self.amount}"
+    
 
 class Education(models.Model):
     employee = models.ForeignKey(Employee, related_name='education', on_delete=models.CASCADE)
