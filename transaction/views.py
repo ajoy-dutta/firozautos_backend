@@ -214,7 +214,7 @@ def create_purchase_entry(data):
 
 
 def update_stock(product, company_name, quantity, price):
-
+    
     stock, created = StockProduct.objects.get_or_create(
         product=product,
         part_no=product.part_no,

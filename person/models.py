@@ -10,7 +10,7 @@ class IsStaffOrAdmin(BasePermission):
 class Exporter(models.Model):
     company_name = models.CharField(max_length=255)
     exporter_name = models.CharField(max_length=255)
-    mail_address = models.EmailField()
+    mail_address = models.EmailField(blank=True, null=True)
     whatsapp_number = models.CharField(max_length=20, blank=True, null=True)
 
     def __str__(self):
@@ -167,7 +167,8 @@ class Education(models.Model):
 
 class Supplier(models.Model):
     supplier_name = models.CharField(max_length=200)
-    district = models.ForeignKey(DistrictMaster, on_delete=models.PROTECT)
+    division = models.CharField(max_length=100, blank=True, null=True)
+    district = models.CharField(max_length=100, blank=True, null=True)
     country = models.CharField(max_length=100)
     supplier_type = models.ForeignKey(SupplierTypeMaster, on_delete=models.PROTECT)
     shop_name = models.CharField(max_length=200, blank=True, null=True)
@@ -189,6 +190,7 @@ class Supplier(models.Model):
 
 class Customer(models.Model):
     customer_name = models.CharField(max_length=255)
+    division = models.CharField(max_length=100, blank=True, null=True)
     district = models.CharField(max_length=100, blank=True, null=True)
     customer_type = models.CharField(max_length=100, blank=True, null=True)
     shop_name = models.CharField(max_length=255, blank=True, null=True)

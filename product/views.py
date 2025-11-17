@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import *
 from .serializers import *
+from rest_framework.decorators import action
 
 
 # ----------------------------
@@ -103,11 +104,36 @@ class SupplierPurchaseViewSet(viewsets.ModelViewSet):
 class StockViewSet(viewsets.ModelViewSet):
     queryset = StockProduct.objects.all()
     serializer_class = StockSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['part_no', 'product__product_name', 'company_name']
-    filterset_fields = ['product', 'company_name']
 
+    @action(detail=True, methods=['patch'], url_path="set-damage-quantity")
+    def set_damage_quantity(self, request, pk=None):
+        stock = self.get_object()
+        damage_qty = request.data.get("damage_quantity")
+
+        # Validate
+        try:
+            damage_qty = int(damage_qty)
+        except:
+            return Response(
+                {"error": "damage_quantity must be a number"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if damage_qty < 0:
+            return Response(
+                {"error": "damage_quantity cannot be negative"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update the stock damage quantity
+        stock.current_stock_quantity = max(stock.current_stock_quantity - damage_qty, 0)
+        stock.damage_quantity += damage_qty
+        stock.save()
+
+        return Response(
+            {"message": "Damage quantity updated successfully", "data": StockSerializer(stock).data},
+            status=status.HTTP_200_OK
+        )
 
 # ----------------------------
 # Supplier Purchase Return

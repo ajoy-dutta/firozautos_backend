@@ -26,6 +26,13 @@ class PaymentModeViewSet(viewsets.ModelViewSet):
     serializer_class = PaymentModeSerializer
 
 
+
+class DivisionMasterViewSet(viewsets.ModelViewSet):
+    queryset = DivisionMaster.objects.all()
+    serializer_class = DivisionMasterSerializer
+
+
+
 class DistrictMasterViewSet(viewsets.ModelViewSet):
     queryset = DistrictMaster.objects.all()
     serializer_class = DistrictMasterSerializer

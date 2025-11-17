@@ -65,6 +65,8 @@ class EmployeeSalaryTransactionSerializer(serializers.ModelSerializer):
         model = EmployeeSalaryTransaction
         fields = "__all__"
 
+
+
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
@@ -74,7 +76,6 @@ class CustomerSerializer(serializers.ModelSerializer):
        
 class SupplierSerializer(serializers.ModelSerializer):
     supplier_type_detail = SupplierTypeMasterSerializer(source='supplier_type', read_only=True)
-    district_detail = DistrictMasterSerializer(source='district', read_only=True)
 
     class Meta:
         model = Supplier

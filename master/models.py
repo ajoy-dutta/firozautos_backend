@@ -34,7 +34,17 @@ class PaymentMode(models.Model):
     def __str__(self):
         return self.name
 
+
+
+class DivisionMaster(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
 class DistrictMaster(models.Model):
+    division = models.ForeignKey(DivisionMaster, on_delete=models.CASCADE, default=None)
     name = models.CharField(max_length=100)
 
     def __str__(self):

@@ -2,8 +2,6 @@ from rest_framework import serializers
 from .models import*
 
 
-
-
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
@@ -29,7 +27,15 @@ class PaymentModeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
+class DivisionMasterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DivisionMaster
+        fields = '__all__'
+
+
 class DistrictMasterSerializer(serializers.ModelSerializer):
+    division_name = serializers.CharField(source='division.name', read_only=True)
     class Meta:
         model = DistrictMaster
         fields = '__all__'
