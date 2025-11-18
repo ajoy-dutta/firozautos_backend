@@ -10,9 +10,10 @@ class LoanSerializer(serializers.ModelSerializer):
 
 
 class PurchaseItemSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = PurchaseItem
-        fields = ['id', 'part_no', 'quantity', 'purchase_price', 'total_price']
+        fields = ['id', 'product', 'quantity', 'purchase_price', 'total_price']
 
 
 

@@ -9,9 +9,10 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django.utils.dateparse import parse_date
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from product.models import SupplierPurchase
+from product.models import SupplierPurchase, PurchaseProduct
 from .serializers import CombinedPurchaseSerializer
 from decimal import Decimal
+from django.db.models import Prefetch
 
 
 
@@ -28,19 +29,6 @@ class LoanDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LoanSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-
-
-
-# class PurchaseEntryListCreateView(generics.ListCreateAPIView):
-#     queryset = PurchaseEntry.objects.all().order_by('-purchase_date')
-#     serializer_class = PurchaseEntrySerializer
-#     permission_classes = [IsAuthenticatedOrReadOnly]
-
-
-# class PurchaseEntryDetailView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = PurchaseEntry.objects.all()
-#     serializer_class = PurchaseEntrySerializer
-#     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
 
@@ -88,28 +76,28 @@ class IncomeViewset(viewsets.ModelViewSet):
 class CombinedPurchaseView(APIView):
     def get(self, request):
 
-        company = request.query_params.get("company")
+        company_name = request.query_params.get("company")
+        part_no = request.query_params.get("part_no")
         from_date = request.query_params.get("from_date")
         to_date = request.query_params.get("to_date")
-
-        purchases = SupplierPurchase.objects.prefetch_related("products__product", "supplier").all()
         grouped_data = []
 
-        print("purchases",purchases)
 
+        supplier_purchases = (
+            SupplierPurchase.objects
+            .select_related("supplier")          # forward FK → best option
+            .prefetch_related("products__product")  # reverse FK + nested FK
+        )
 
-        if company:
-            purchases = purchases.filter(company_name__iexact=company)
+        if company_name:
+            supplier_purchases = supplier_purchases.filter(company_name__iexact=company_name)
         if from_date:
-            purchases = purchases.filter(purchase_date__gte=parse_date(from_date))
+            supplier_purchases = supplier_purchases.filter(purchase_date__gte=parse_date(from_date))
         if to_date:
-            purchases = purchases.filter(purchase_date__lte=parse_date(to_date))
+            supplier_purchases = supplier_purchases.filter(purchase_date__lte=parse_date(to_date))
 
-        
-        print("purchases",purchases)
+        for purchase in supplier_purchases:
 
-
-        for purchase in purchases:
             # All product names and part numbers
             product_names = []
             part_no_list = []
@@ -117,6 +105,11 @@ class CombinedPurchaseView(APIView):
             total_amt = 0
 
             for item in purchase.products.all():
+                # for Part Wise Filtering
+                if part_no:
+                    if item.product and item.product.part_no != part_no:
+                        continue
+
                 if item.product:
                     name_part = f"{item.product.product_name}"
                     product_names.append(name_part)
@@ -132,6 +125,9 @@ class CombinedPurchaseView(APIView):
                 total_qty += item.purchase_quantity
                 total_amt += float(item.total_price)
 
+            if total_qty == 0:
+                continue
+
             grouped_data.append({
                 "date": purchase.purchase_date,
                 "invoice_no": purchase.invoice_no,
@@ -142,36 +138,63 @@ class CombinedPurchaseView(APIView):
                 "purchase_amount": round(total_amt, 2),
             })
 
+            print("Grouped Data", grouped_data)
 
-        # purchase_entries = PurchaseEntry.objects.all()
 
-        # if company:
-        #     purchase_entries = purchase_entries.filter(company_name__iexact=company)
-        # if from_date:
-        #     purchase_entries = purchase_entries.filter(purchase_date__gte=parse_date(from_date))
-        # if to_date:
-        #     purchase_entries = purchase_entries.filter(purchase_date__lte=parse_date(to_date))
 
-        # for pe in purchase_entries:
-        #     try:
-        #         product = Product.objects.get(part_no=pe.part_no)
-        #         product_name = product.product_name
-        #     except Product.DoesNotExist:
-        #         product_name = "—" 
-        #     except Product.MultipleObjectsReturned:
-        #         product_name = Product.objects.filter(part_no=pe.part_no).first().product_name
+        # Purchase from Exporter
+        purchases = Purchase.objects.prefetch_related('items__product').all()
 
-        #     grouped_data.append({
-        #         "date": pe.purchase_date,
-        #         "invoice_no": pe.invoice_no,
-        #         "part_no": pe.part_no,
-        #         "product_name": product_name,  
-        #         "supplier_or_exporter": pe.exporter_name,
-        #         "quantity": pe.quantity,
-        #         "purchase_amount": pe.total_price,
-        #     })
+        if company_name:
+            purchases = purchases.filter(company_name__iexact=company_name)
+        if from_date:
+            purchases = purchases.filter(purchase_date__gte=parse_date(from_date))
+        if to_date:
+            purchases = purchases.filter(purchase_date__lte=parse_date(to_date))
 
-        print("Grouped Data", grouped_data)
+        for purchase in purchases:
+            product_names = []
+            part_no_list = []
+            total_qty = 0
+            total_amt = 0
+
+
+            for item in purchase.items.all():
+                # for Part Wise Filtering
+                if part_no:
+                    if item.product and item.product.part_no != part_no:
+                        continue
+
+                if item.product:
+                    name_part = f"{item.product.product_name}"
+                    product_names.append(name_part)
+                else:
+                    product_names.append("—")
+                
+                if item.product:
+                    part_no = f"{item.product.part_no}"
+                    part_no_list.append(part_no)
+                else:
+                    part_no_list.append("—")
+
+                total_qty += item.quantity
+                total_amt += float(item.total_price)
+
+
+            if total_qty == 0:
+                continue
+        
+            grouped_data.append({
+                "date": purchase.purchase_date,
+                "invoice_no": purchase.invoice_no,
+                "part_no": part_no_list,
+                "product_name": product_names,  
+                "supplier_or_exporter": purchase.exporter_name,
+                "quantity": total_qty,
+                "purchase_amount": total_amt,
+            })
+
+        # print("Grouped Data", grouped_data)
 
         # --- Sort by Date Descending ---
         grouped_data.sort(key=lambda x: x["date"], reverse=True)
@@ -183,17 +206,24 @@ class CombinedPurchaseView(APIView):
 
 
 
+
 def create_purchase_entry(data):
     try:
         company = Company.objects.get(id=data["company_id"])
     except Company.DoesNotExist:
         raise ValueError("Company not found")
+    
+
+    try:
+        product = Product.objects.get(part_no=data["part_no"])
+    except Product.DoesNotExist:
+        raise ValueError("Product not found")
 
     # Get or create the Purchase
     purchase, created = Purchase.objects.get_or_create(
         invoice_no=data["invoice_no"],
+        purchase_date =data["purchase_date"],
         defaults={
-            "purchase_date": data["purchase_date"],
             "exporter_name": data["exporter_name"],
             "company_name": company.company_name,
         }
@@ -202,10 +232,10 @@ def create_purchase_entry(data):
     # Create PurchaseItem
     purchase_item = PurchaseItem.objects.create(
         purchase=purchase,
-        part_no=data["part_no"],
+        product=product,
         quantity=data["quantity"],
         purchase_price=data["purchase_price"],
-        total_price=data["total_price"],
+        total_price= Decimal(data["quantity"]) * Decimal(data["purchase_price"]),
     )
 
     return purchase_item
@@ -213,7 +243,7 @@ def create_purchase_entry(data):
 
 
 
-def update_stock(product, company_name, quantity, price):
+def update_stock(product, company_name, quantity, price, unit):
     
     stock, created = StockProduct.objects.get_or_create(
         product=product,
@@ -268,19 +298,14 @@ class UploadStockExcelView(APIView):
         except Exception as e:
             return Response({"error": f"Invalid Excel file: {str(e)}"}, status=400)
 
-        required_cols = ["product_name", "part_no", "category", "price", "quantity", "gross"]
-        for col in required_cols:
-            if col not in df.columns:
-                return Response({"error": f"Missing column: {col}"}, status=400)
-
+        
         created_stocks = []
-
         with transaction.atomic():
             for _, row in df.iterrows():
-                part_no = str(row["part_no"]).strip()
-                price = float(row["price"])
-                quantity = int(row["quantity"])
-                gross = float(row["gross"])
+                part_no = str(row["Part_no"]).strip()
+                price = float(row["Rate"])
+                quantity = int(row["Qty"])
+                unit = str(row["Unit"])
 
                 try:
                     product = Product.objects.get(part_no=part_no)
@@ -292,7 +317,7 @@ class UploadStockExcelView(APIView):
                 product.save()
 
                 # Update stock using the helper function
-                update_stock(product, company.company_name, quantity, price)
+                update_stock(product, company.company_name, quantity, price, unit)
 
                 # Create purchase entry
                 create_purchase_entry({
@@ -303,7 +328,6 @@ class UploadStockExcelView(APIView):
                     "part_no": part_no,
                     "quantity": quantity,
                     "purchase_price": price,
-                    "total_price": gross,
                 })
 
                 created_stocks.append({
