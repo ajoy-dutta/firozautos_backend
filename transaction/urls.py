@@ -14,5 +14,4 @@ urlpatterns = [
     path('loans/<int:pk>/', LoanDetailView.as_view(), name='loan-detail'),
 
     path("upload-order-excel/", UploadStockExcelView.as_view(), name="upload-stock-excel"),
-    path('purchase-report/', CombinedPurchaseView.as_view(), name="purchase-report"),
 ]

@@ -92,12 +92,3 @@ class IncomeSrializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
-class CombinedPurchaseSerializer(serializers.Serializer):
-    date = serializers.DateField()
-    invoice_no = serializers.CharField()
-    part_no = serializers.CharField()
-    product_name = serializers.CharField()
-    supplier_or_exporter = serializers.CharField()
-    quantity = serializers.IntegerField()
-    purchase_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
