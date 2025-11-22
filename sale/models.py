@@ -8,7 +8,6 @@ from django.utils import timezone
 
 class Sale(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    company_name = models.CharField(max_length=255)
     sale_date = models.DateField(default=timezone.now)
     invoice_no = models.CharField(max_length=100, blank=True, null=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2)

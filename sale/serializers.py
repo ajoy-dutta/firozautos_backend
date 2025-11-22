@@ -115,7 +115,6 @@ class SaleSerializer(serializers.ModelSerializer):
             'id',
             'customer',
             'customer_id',
-            'company_name',
             'sale_date',
             'invoice_no',
             'total_amount',

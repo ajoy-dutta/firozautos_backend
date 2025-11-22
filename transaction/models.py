@@ -25,34 +25,6 @@ class Loan(models.Model):
     
 
 
-class Purchase(models.Model):
-    invoice_no = models.CharField(max_length=100, unique=True)
-    purchase_date = models.DateField()
-    exporter_name = models.CharField(max_length=255)
-    company_name = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.invoice_no} ({self.purchase_date})"
-
-
-
-class PurchaseItem(models.Model):
-    purchase = models.ForeignKey(
-        Purchase,
-        related_name="items",
-        on_delete=models.CASCADE
-    )
-    product = models.ForeignKey('product.Product', on_delete=models.CASCADE,blank=True, null=True)
-    quantity = models.PositiveIntegerField()
-    purchase_price = models.DecimalField(max_digits=12, decimal_places=2)
-    total_price = models.DecimalField(max_digits=12, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.product} - Qty {self.quantity}"
-    
-
-
 
 class Expense(models.Model):
     TRANSACTION_CHOICES = [

@@ -89,14 +89,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         return qs
 
 
-# ----------------------------
-# Supplier Purchase
-# ----------------------------
-class SupplierPurchaseViewSet(viewsets.ModelViewSet):
-    queryset = SupplierPurchase.objects.all().order_by('-purchase_date')
-    serializer_class = SupplierPurchaseSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
 
 # ----------------------------
 # Stock
@@ -135,42 +127,3 @@ class StockViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-# ----------------------------
-# Supplier Purchase Return
-# ----------------------------
-class SupplierPurchaseReturnViewSet(viewsets.ModelViewSet):
-    queryset = SupplierPurchaseReturn.objects.all().order_by('-return_date')
-    serializer_class = SupplierPurchaseReturnSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        invoice_no = self.request.query_params.get('invoice_no')
-        if invoice_no:
-            queryset = queryset.filter(purchase_product__purchase__invoice_no=invoice_no)
-        return queryset
-
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        purchase_product = instance.purchase_product
-        # Update returned_quantity
-        purchase_product.returned_quantity += instance.quantity
-        purchase_product.save()
-        # Update stock
-        stock = StockProduct.objects.filter(
-            company_name=purchase_product.purchase.company_name,
-            part_no=purchase_product.part_no,
-            product=purchase_product.product
-        ).first()
-        if stock:
-            stock.current_stock_quantity = max(stock.current_stock_quantity - instance.quantity, 0)
-            stock.save()
-
-
-# ----------------------------
-# Order
-# ----------------------------
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.prefetch_related('items__product').all()
-    serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]

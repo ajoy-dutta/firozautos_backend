@@ -1,19 +1,15 @@
 
-import pandas as pd
-from django.db import transaction
 from .serializers import *
 from django.utils.dateparse import parse_date
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from purchase.models import SupplierPurchase, Purchase
 from .serializers import CombinedPurchaseSerializer
 from decimal import Decimal
 from django.db.models import Sum
 from sale.models import Sale
 from sale.serializers import SaleSerializer
 from transaction.models import Expense
-from transaction.serializers import ExpenseSerializer
-
+from purchase.models import SupplierPurchase, Purchase
 
 
 
@@ -21,7 +17,7 @@ class CombinedPurchaseView(APIView):
     def get(self, request):
 
         company_name = request.query_params.get("company")
-        part_no = request.query_params.get("part_no")
+        part_num = request.query_params.get("part_no")
         from_date = request.query_params.get("from_date")
         to_date = request.query_params.get("to_date")
         grouped_data = []
@@ -50,10 +46,11 @@ class CombinedPurchaseView(APIView):
 
             for item in purchase.products.all():
                 # for Part Wise Filtering
-                if part_no:
-                    if item.product and item.product.part_no != part_no:
+                if part_num:
+                    if item.product and item.product.part_no != part_num:
                         continue
-
+                
+                print("Item Product:", item.product)
                 if item.product:
                     name_part = f"{item.product.product_name}"
                     product_names.append(name_part)
@@ -104,11 +101,14 @@ class CombinedPurchaseView(APIView):
 
 
             for item in purchase.items.all():
+                print("Item Product:", item.product)
+
                 # for Part Wise Filtering
-                if part_no:
-                    if item.product and item.product.part_no != part_no:
+                if part_num:
+                    if item.product and item.product.part_no != part_num:
                         continue
 
+                # print("Item Product:", item.product)
                 if item.product:
                     name_part = f"{item.product.product_name}"
                     product_names.append(name_part)
